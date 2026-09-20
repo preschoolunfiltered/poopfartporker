@@ -1,0 +1,1913 @@
+<title>Four Holdings Earnings Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+/* ============================================================
+   TOKENS — full light palette on bare :root.
+   Series colors are the validated dataviz categorical slots 1-4
+   (blue / orange / aqua / yellow) in that exact order; the order
+   IS the colorblind-safety mechanism, so it is never reshuffled.
+   Chart surface is held at the validated #fcfcfb / #1a1a19.
+   ============================================================ */
+:root {
+  color-scheme: light;
+
+  --plane:        #f4f6f8;   /* page ground, cool-biased neutral */
+  --surface:      #fcfcfb;   /* chart + card surface (validated) */
+  --surface-2:    #eef1f5;   /* recessed wells */
+  --surface-3:    #e6eaf0;
+
+  --ink:          #0b0d10;
+  --ink-2:        #4c525c;
+  --ink-3:        #7f8792;
+  --grid:         #e0e4ea;
+  --rule:         #d3d8e0;
+  --baseline:     #bcc3cd;
+  --ring:         rgba(11,13,16,.10);
+  --ring-2:       rgba(11,13,16,.16);
+
+  /* company identity — validated slots 1-4, light steps */
+  --amd:   #2a78d6;
+  --orcl:  #eb6834;
+  --celh:  #1baf7a;
+  --elf:   #eda100;
+
+  /* sequential blue ramp (within-company magnitude) — ordinal-safe
+     on light: nothing lighter than step 250 */
+  --seq-1: #1c5cab;  /* 550 */
+  --seq-2: #2a78d6;  /* 450 */
+  --seq-3: #5598e7;  /* 350 */
+  --seq-4: #86b6ef;  /* 250 */
+
+  /* status — fixed, never themed */
+  --good:     #0ca30c;
+  --warning:  #fab219;
+  --serious:  #ec835a;
+  --critical: #d03b3b;
+  --good-ink: #006300;
+  --crit-ink: #a62626;
+
+  --shadow-card: 0 1px 2px rgba(11,13,16,.05), 0 8px 24px -14px rgba(11,13,16,.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plane:     #0b0c0e;
+    --surface:   #1a1a19;
+    --surface-2: #232527;
+    --surface-3: #2c2f33;
+    --ink:       #ffffff;
+    --ink-2:     #c2c6cd;
+    --ink-3:     #8d939d;
+    --grid:      #2b2e32;
+    --rule:      #383c42;
+    --baseline:  #454a51;
+    --ring:      rgba(255,255,255,.12);
+    --ring-2:    rgba(255,255,255,.20);
+    --amd:  #3987e5;
+    --orcl: #d95926;
+    --celh: #199e70;
+    --elf:  #c98500;
+    --seq-1: #86b6ef;
+    --seq-2: #5598e7;
+    --seq-3: #3987e5;
+    --seq-4: #184f95;
+    --good-ink: #0ca30c;
+    --crit-ink: #e66767;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane:     #0b0c0e;
+  --surface:   #1a1a19;
+  --surface-2: #232527;
+  --surface-3: #2c2f33;
+  --ink:       #ffffff;
+  --ink-2:     #c2c6cd;
+  --ink-3:     #8d939d;
+  --grid:      #2b2e32;
+  --rule:      #383c42;
+  --baseline:  #454a51;
+  --ring:      rgba(255,255,255,.12);
+  --ring-2:    rgba(255,255,255,.20);
+  --amd:  #3987e5;
+  --orcl: #d95926;
+  --celh: #199e70;
+  --elf:  #c98500;
+  --seq-1: #86b6ef;
+  --seq-2: #5598e7;
+  --seq-3: #3987e5;
+  --seq-4: #184f95;
+  --good-ink: #0ca30c;
+  --crit-ink: #e66767;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -16px rgba(0,0,0,.8);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; }
+@media (max-width: 560px) { .wrap { padding-inline: 16px; } }
+
+h1, h2, h3, h4 {
+  font-family: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+  text-wrap: balance;
+  margin: 0;
+  letter-spacing: -.015em;
+}
+h1 { font-size: clamp(30px, 5.2vw, 50px); font-weight: 800; line-height: 1.03; }
+h2 { font-size: clamp(21px, 3vw, 28px); font-weight: 700; line-height: 1.12; }
+h3 { font-size: 17px; font-weight: 700; }
+h4 { font-size: 14px; font-weight: 700; }
+p  { margin: 0; }
+
+.mono { font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; }
+.num  { font-variant-numeric: tabular-nums; }
+
+.eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+
+/* ---------------- header ---------------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60;
+  background: color-mix(in srgb, var(--plane) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.topbar-in {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding-block: 9px;
+}
+.brandmark {
+  font-family: "Bricolage Grotesque", sans-serif; font-weight: 800;
+  font-size: 15px; letter-spacing: -.02em; white-space: nowrap;
+}
+.tickrail { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.tick {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px 4px 8px; border-radius: 999px;
+  border: 1px solid var(--ring); background: var(--surface);
+  font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600;
+  color: var(--ink); text-decoration: none; cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+.tick:hover { border-color: var(--ring-2); transform: translateY(-1px); }
+.tick .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.tick .pct { font-size: 11px; color: var(--ink-2); font-weight: 500; }
+
+/* ---------------- hero ---------------- */
+.hero { padding-block: 34px 26px; }
+.hero .lede {
+  max-width: 62ch; margin-top: 14px; font-size: 16.5px; color: var(--ink-2);
+}
+.stamp {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px;
+  padding: 5px 11px; border-radius: 6px;
+  background: var(--surface); border: 1px solid var(--ring);
+  font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-2);
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent);
+}
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+.btn {
+  font-family: "IBM Plex Sans", sans-serif; font-size: 13px; font-weight: 600;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--ring-2); background: var(--surface); color: var(--ink);
+  transition: background .15s, border-color .15s;
+}
+.btn:hover { background: var(--surface-2); border-color: var(--baseline); }
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--plane); border-color: var(--ink); }
+:focus-visible { outline: 2.5px solid var(--amd); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------------- section frame ---------------- */
+section { padding-block: 30px; }
+.sec-head { margin-bottom: 18px; }
+.sec-head p { margin-top: 7px; color: var(--ink-2); max-width: 68ch; font-size: 14.5px; }
+
+/* ---------------- radar (next earnings) ---------------- */
+.radar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 900px) { .radar { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .radar { grid-template-columns: 1fr; } }
+
+.rcard {
+  position: relative; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--ring);
+  border-radius: 12px; padding: 14px 14px 13px;
+}
+.rcard::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--c);
+}
+.rcard .tk {
+  font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12.5px;
+  color: var(--c); letter-spacing: .04em;
+}
+.countdown {
+  font-family: "Bricolage Grotesque", sans-serif; font-weight: 800;
+  font-size: 40px; line-height: 1; letter-spacing: -.03em; margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.countdown small { font-size: 13px; font-weight: 600; color: var(--ink-3); letter-spacing: 0; }
+.rcard .when { margin-top: 7px; font-size: 12.5px; color: var(--ink-2); }
+.conf {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 9px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 5px;
+}
+.conf.yes { color: var(--good-ink); background: color-mix(in srgb, var(--good) 13%, transparent); }
+.conf.est { color: var(--ink-2); background: var(--surface-2); }
+
+/* ---------------- pulse tiles ---------------- */
+.pulse { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 980px) { .pulse { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .pulse { grid-template-columns: 1fr; } }
+
+.tile {
+  background: var(--surface); border: 1px solid var(--ring); border-radius: 12px;
+  padding: 15px; display: flex; flex-direction: column; gap: 3px;
+  box-shadow: var(--shadow-card);
+}
+.tile .th { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+.tile .th .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.tile .th .tk { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px; }
+.tile .qlab { font-size: 11px; color: var(--ink-3); margin-left: auto; font-weight: 500; }
+.tile .big {
+  font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 31px;
+  line-height: 1.05; letter-spacing: -.025em; font-variant-numeric: tabular-nums;
+}
+.tile .sub { font-size: 12px; color: var(--ink-3); }
+.tile .strip { display: flex; gap: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--grid); flex-wrap: wrap; }
+.tile .strip div { font-size: 11.5px; color: var(--ink-3); }
+.tile .strip b { display: block; font-size: 14px; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.delta { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+.delta.up   { color: var(--good-ink); }
+.delta.down { color: var(--crit-ink); }
+.delta .arw { font-size: 10px; }
+
+/* ---------------- charts (plain HTML/CSS) ---------------- */
+.chart { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 16px; }
+.chart-head { margin-bottom: 4px; }
+.chart-title { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.chart-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+.readme {
+  margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--grid);
+  font-size: 12.5px; color: var(--ink-2);
+}
+.readme b { color: var(--ink); font-weight: 600; }
+
+/* horizontal bars */
+.hbars { display: flex; flex-direction: column; gap: 11px; margin-top: 16px; }
+.hrow { display: grid; grid-template-columns: 74px 1fr; gap: 11px; align-items: center; }
+@media (max-width: 480px) { .hrow { grid-template-columns: 62px 1fr; gap: 8px; } }
+.hrow .hl { display: flex; align-items: center; gap: 6px; font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; }
+.hrow .hl .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.htrack { position: relative; height: 26px; background: var(--surface-2); border-radius: 4px; display: flex; align-items: center; }
+.hfill {
+  height: 100%; border-radius: 4px; background: var(--c); min-width: 3px;
+  transition: width .5s cubic-bezier(.22,.8,.3,1);
+}
+.hfill.neg { background: var(--critical); }
+.hval {
+  position: absolute; left: calc(var(--w) + 9px); font-size: 12.5px; font-weight: 600;
+  font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink);
+}
+/* Value labels always sit OUTSIDE the fill, in theme ink. Placing them inside
+   put white text on the yellow and aqua slots, which is unreadable — and these
+   labels are the required relief for those two sub-3:1 light-mode slots. */
+.htrack.missing { background: repeating-linear-gradient(135deg, var(--surface-2) 0 6px, var(--surface-3) 6px 12px); }
+.htrack.missing .hval { left: 9px; color: var(--ink-3); font-weight: 500; font-style: italic; }
+
+/* vertical columns */
+.cols { margin-top: 18px; }
+.plot { position: relative; height: 176px; display: flex; align-items: flex-end; gap: 10px; padding-top: 22px; }
+.plot .gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--grid); pointer-events: none; }
+.plot .gridline span {
+  position: absolute; right: 0; top: -16px; font-size: 10.5px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums; background: var(--surface); padding-left: 5px;
+}
+.plot .zero { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--baseline); }
+.col { flex: 1 1 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; min-width: 0; position: relative; height: 100%; }
+.bar {
+  border-radius: 4px 4px 0 0; background: var(--c); position: relative;
+  transition: height .55s cubic-bezier(.22,.8,.3,1);
+  cursor: default;
+}
+.bar.guide {
+  background: repeating-linear-gradient(135deg, var(--c) 0 5px, color-mix(in srgb, var(--c) 42%, var(--surface)) 5px 10px);
+  border: 1.5px dashed color-mix(in srgb, var(--c) 70%, var(--surface));
+  border-bottom: none;
+}
+.bar .tag {
+  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  margin-bottom: 5px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.stack { display: flex; flex-direction: column-reverse; gap: 2px; }
+.stack .seg { border-radius: 2px; }
+.stack .seg:last-child { border-radius: 4px 4px 2px 2px; }
+.xaxis { display: flex; gap: 10px; margin-top: 8px; }
+.xaxis div { flex: 1 1 0; text-align: center; font-size: 11px; color: var(--ink-2); line-height: 1.3; min-width: 0; }
+.xaxis div b { display: block; color: var(--ink); font-weight: 600; font-size: 11.5px; }
+
+.legend { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 13px; }
+.lgi { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+.lgi .sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+
+/* small multiples grid */
+.multi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 900px) { .multi { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .multi { grid-template-columns: 1fr; } }
+.mini { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 13px; }
+.mini .mh { display: flex; align-items: center; gap: 6px; font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; }
+.mini .mh .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.mini .mper { font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
+.mini .fcf { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--grid); font-size: 11.5px; color: var(--ink-3); }
+.mini .fcf b { display: block; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------------- company sections ---------------- */
+.co {
+  position: relative; background: var(--surface); border: 1px solid var(--ring);
+  border-radius: 16px; overflow: hidden; margin-bottom: 22px;
+  box-shadow: var(--shadow-card);
+}
+.co::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--c); }
+.co-in { padding: 20px 20px 22px 23px; }
+@media (max-width: 560px) { .co-in { padding: 17px 15px 19px 17px; } }
+
+.co-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.co-id { min-width: 0; }
+.co-tk {
+  font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px;
+  color: var(--c); letter-spacing: .05em;
+}
+.co-name { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: clamp(22px, 3.4vw, 31px); letter-spacing: -.025em; line-height: 1.06; margin-top: 1px; }
+.co-what { font-size: 13px; color: var(--ink-2); margin-top: 5px; max-width: 54ch; }
+.co-badges { display: flex; gap: 7px; flex-wrap: wrap; margin-left: auto; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px;
+  border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.pill.beat  { color: var(--good-ink);  background: color-mix(in srgb, var(--good) 13%, transparent);     border-color: color-mix(in srgb, var(--good) 30%, transparent); }
+.pill.miss  { color: var(--crit-ink);  background: color-mix(in srgb, var(--critical) 13%, transparent); border-color: color-mix(in srgb, var(--critical) 30%, transparent); }
+.pill.mixed { color: var(--ink);       background: color-mix(in srgb, var(--warning) 20%, transparent);  border-color: color-mix(in srgb, var(--warning) 45%, transparent); }
+.pill.neutral { color: var(--ink-2); background: var(--surface-2); border-color: var(--ring); }
+
+.fiscal {
+  margin-top: 14px; padding: 9px 12px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--ring);
+  font-size: 12.5px; color: var(--ink-2);
+}
+.fiscal b { color: var(--ink); font-weight: 600; }
+
+.blockhead { margin-top: 26px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.blockhead .eyebrow { flex: none; }
+.blockhead .hint { font-size: 12.5px; color: var(--ink-3); }
+
+/* two-quarter bullets */
+.quarters { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-top: 12px; }
+@media (max-width: 720px) { .quarters { grid-template-columns: 1fr; } }
+.qcard { border: 1px solid var(--ring); border-radius: 11px; padding: 14px; background: var(--surface); }
+.qcard.latest { border-color: color-mix(in srgb, var(--c) 48%, var(--ring)); background: color-mix(in srgb, var(--c) 5%, var(--surface)); }
+.qcard .qh { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.qcard .qname { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 16px; }
+.qcard .qmeta { font-size: 11px; color: var(--ink-3); font-family: "IBM Plex Mono", monospace; }
+.qcard ul { margin: 11px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.qcard li { position: relative; padding-left: 17px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.qcard li::before {
+  content: ""; position: absolute; left: 0; top: 7px; width: 7px; height: 7px;
+  border-radius: 2px; background: var(--c);
+}
+.qcard li.neg::before  { background: var(--critical); }
+.qcard li.pos::before  { background: var(--good); }
+.qcard li.flag::before { background: var(--warning); }
+.qcard li b { color: var(--ink); font-weight: 600; }
+.qcard li .mono { font-weight: 600; color: var(--ink); }
+
+/* guidance */
+.guide-panel {
+  margin-top: 12px; border-radius: 11px; padding: 15px;
+  background: color-mix(in srgb, var(--c) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--c) 34%, var(--ring));
+  border-left: 4px solid var(--c);
+}
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 13px; margin-top: 11px; }
+.gitem .gk { font-size: 11px; color: var(--ink-3); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.gitem .gv { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.gitem .gn { font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
+.guide-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-2); }
+
+/* quotes */
+.quotes { display: flex; flex-direction: column; gap: 11px; margin-top: 12px; }
+.quote {
+  border-left: 3px solid color-mix(in srgb, var(--c) 60%, var(--ring));
+  padding: 3px 0 3px 14px;
+}
+.quote q { font-size: 14.5px; line-height: 1.55; color: var(--ink); quotes: "\201C" "\201D"; }
+.quote .attr { display: block; margin-top: 6px; font-size: 11.5px; color: var(--ink-3); font-weight: 500; }
+.quote.para q { font-style: normal; }
+.quote.para q::before, .quote.para q::after { content: ""; }
+.quote.para .attr::before { content: "Paraphrase · "; }
+
+/* charts inside a company */
+.co-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(275px, 1fr)); gap: 13px; margin-top: 12px; }
+
+/* statements */
+.stmt-wrap { margin-top: 12px; display: flex; flex-direction: column; gap: 13px; }
+.stmt { border: 1px solid var(--ring); border-radius: 11px; overflow: hidden; }
+.stmt > summary {
+  padding: 11px 14px; cursor: pointer; list-style: none;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface-2); font-weight: 600; font-size: 13.5px;
+}
+.stmt > summary::-webkit-details-marker { display: none; }
+.stmt > summary::after { content: "▾"; margin-left: auto; color: var(--ink-3); font-size: 11px; transition: transform .2s; }
+.stmt[open] > summary::after { transform: rotate(180deg); }
+.stmt > summary .sname { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; }
+.stmt > summary .unit { font-size: 11px; color: var(--ink-3); font-weight: 500; font-family: "IBM Plex Mono", monospace; }
+.tscroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: right; padding: 9px 12px; font-size: 11px; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3);
+  border-bottom: 1px solid var(--rule); white-space: nowrap; background: var(--surface);
+  position: sticky; top: 0;
+}
+thead th:first-child { text-align: left; }
+tbody td { padding: 7px 12px; border-bottom: 1px solid var(--grid); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tbody td:first-child { text-align: left; white-space: normal; min-width: 190px; color: var(--ink-2); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr.sum td { font-weight: 700; color: var(--ink); background: var(--surface-2); }
+tbody tr.sum td:first-child { color: var(--ink); }
+tbody tr.indent td:first-child { padding-left: 26px; font-size: 12.5px; }
+tbody tr.spacer td { height: 6px; padding: 0; border-bottom: none; background: transparent; }
+td.v { color: var(--ink); font-weight: 500; }
+td.na { color: var(--ink-3); font-style: italic; font-weight: 400; }
+.derived { color: var(--ink-3); font-size: 10px; vertical-align: super; font-style: normal; cursor: help; }
+.stmt-foot { padding: 10px 14px; font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-top: 1px solid var(--grid); }
+tr.detail-row { display: table-row; }
+body.keylines tr.detail-row { display: none; }
+
+/* glossary */
+.gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 12px; }
+.gcard { background: var(--surface); border: 1px solid var(--ring); border-radius: 11px; padding: 14px; }
+.gcard dt { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12.5px; color: var(--ink); }
+.gcard dd { margin: 5px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+
+/* notices */
+.notice {
+  border-radius: 12px; padding: 16px 18px; border: 1px solid var(--ring);
+  background: var(--surface);
+}
+.notice.warn {
+  border-color: color-mix(in srgb, var(--warning) 52%, var(--ring));
+  background: color-mix(in srgb, var(--warning) 11%, var(--surface));
+}
+.notice h3 { display: flex; align-items: center; gap: 8px; }
+.notice ul { margin: 11px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; }
+.notice li { font-size: 13.5px; color: var(--ink-2); }
+.notice li b { color: var(--ink); }
+
+.icon { width: 17px; height: 17px; flex: none; }
+
+/* tooltip */
+#tip {
+  position: fixed; z-index: 200; pointer-events: none; opacity: 0;
+  transform: translate(-50%, -120%); transition: opacity .12s;
+  background: var(--ink); color: var(--plane); border-radius: 7px;
+  padding: 7px 10px; font-size: 12px; line-height: 1.4; max-width: 230px;
+  box-shadow: 0 8px 22px -8px rgba(0,0,0,.5); font-variant-numeric: tabular-nums;
+}
+#tip b { display: block; font-size: 12.5px; }
+#tip.on { opacity: 1; }
+
+footer { padding-block: 30px 46px; border-top: 1px solid var(--rule); margin-top: 20px; }
+footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="topbar">
+  <div class="wrap topbar-in">
+    <span class="brandmark">Earnings Desk</span>
+    <nav class="tickrail" aria-label="Jump to holding">
+      <a class="tick" href="#amd"  style="--c:var(--amd)"><span class="dot" style="background:var(--amd)"></span>AMD <span class="pct">+50%</span></a>
+      <a class="tick" href="#orcl" style="--c:var(--orcl)"><span class="dot" style="background:var(--orcl)"></span>ORCL <span class="pct">+30%</span></a>
+      <a class="tick" href="#celh" style="--c:var(--celh)"><span class="dot" style="background:var(--celh)"></span>CELH <span class="pct">+11%</span></a>
+      <a class="tick" href="#elf"  style="--c:var(--elf)"><span class="dot" style="background:var(--elf)"></span>ELF <span class="pct">+36%</span></a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="stamp"><span class="live-dot"></span> Data as of 20 Sep 2026 · all four holdings have reported</div>
+    <h1>Four holdings,<br>eight quarters of receipts.</h1>
+    <p class="lede">
+      Every company here has reported twice since spring. This desk keeps the last two quarters
+      side by side for each one — the bullets, the guidance, what management actually said on the
+      call, and the three financial statements underneath it — so you can see whether the story
+      and the cash agree. Colour is the wayfinding: each holding owns one hue everywhere it appears.
+    </p>
+    <div class="hero-actions">
+      <button class="btn" id="toggleLines" aria-pressed="false">Condense to key lines</button>
+      <button class="btn" id="expandAll">Open all statements</button>
+      <button class="btn" id="collapseAll">Close all statements</button>
+    </div>
+  </header>
+
+  <!-- ============ RADAR ============ -->
+  <section id="radar">
+    <div class="sec-head">
+      <div class="eyebrow">Refresh clock</div>
+      <h2>When the next numbers land</h2>
+      <p>
+        These four run on three different fiscal calendars, so they never report together.
+        The countdown is live in your browser. Each date below is also a scheduled refresh —
+        the page gets rebuilt with the new quarter once the report is out.
+      </p>
+    </div>
+    <div class="radar" id="radarCards"></div>
+  </section>
+
+  <!-- ============ PULSE ============ -->
+  <section id="pulse">
+    <div class="sec-head">
+      <div class="eyebrow">Latest reported quarter</div>
+      <h2>Portfolio pulse</h2>
+      <p>One tile per holding, showing the most recent quarter each has on the board. Growth rates
+        are year over year against the same quarter a year earlier, which is the only fair
+        comparison for businesses this seasonal.</p>
+    </div>
+    <div class="pulse" id="pulseTiles"></div>
+  </section>
+
+  <!-- ============ CROSS-PORTFOLIO ============ -->
+  <section id="compare">
+    <div class="sec-head">
+      <div class="eyebrow">Side by side</div>
+      <h2>How the four compare</h2>
+      <p>Each chart holds one measure on one scale. Where a company doesn't report a comparable
+        figure, its track is hatched and labelled rather than left out — an absent number is
+        information too.</p>
+    </div>
+
+    <div class="co-charts" style="grid-template-columns:repeat(auto-fit,minmax(310px,1fr))">
+      <div class="chart" id="chGrowth"></div>
+      <div class="chart" id="chMargin"></div>
+    </div>
+
+    <div class="blockhead"><div class="eyebrow">Cash engine</div>
+      <span class="hint">Operating cash flow against capital spending — each panel on its own scale, because these four differ by a factor of 200.</span>
+    </div>
+    <div class="multi" id="cashMulti" style="margin-top:12px"></div>
+
+    <details class="stmt" style="margin-top:14px">
+      <summary><span class="sname">Table view</span> <span class="unit">every value plotted above</span></summary>
+      <div class="tscroll" id="compareTable"></div>
+    </details>
+  </section>
+
+  <!-- ============ COMPANIES ============ -->
+  <section id="holdings">
+    <div class="sec-head">
+      <div class="eyebrow">Holding by holding</div>
+      <h2>The four files</h2>
+      <p>Ordered largest revenue first. Each file runs the same way: two quarters of bullets,
+        then guidance, then the call, then the charts, then the statements.</p>
+    </div>
+    <div id="coHost"></div>
+  </section>
+
+  <!-- ============ GLOSSARY ============ -->
+  <section id="glossary">
+    <div class="sec-head">
+      <div class="eyebrow">Plain English</div>
+      <h2>What the jargon means</h2>
+      <p>Terms that appear above, in the order you're likely to hit them.</p>
+    </div>
+    <div class="gloss">
+      <dl class="gcard">
+        <dt>YoY (year over year)</dt>
+        <dd>This quarter against the same quarter last year. Used instead of sequential growth because
+          most of these businesses have a seasonal shape — beauty and energy drinks especially.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>Gross margin</dt>
+        <dd>Revenue minus the direct cost of making the product, as a percentage of revenue. It tells you
+          how much is left to pay for everything else. A drop of 340 basis points means 3.40 percentage points.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>bps (basis points)</dt>
+        <dd>One hundredth of a percentage point. 100&nbsp;bps = 1%. Finance uses it to avoid the ambiguity
+          of "margin fell 3 percent" — which could mean 3 points or 3% of the old number.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>Adjusted EBITDA</dt>
+        <dd>Earnings before interest, tax, depreciation and amortisation, with certain items removed —
+          typically stock compensation, acquisition costs and one-offs. It is <em>not</em> a GAAP measure,
+          and each company chooses its own exclusions, so never compare it across companies without
+          reading both definitions.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>GAAP vs non-GAAP / "adjusted"</dt>
+        <dd>GAAP is the audited, rules-based number. Non-GAAP is management's version with items they
+          consider non-representative stripped out. Both are shown here; where they diverge sharply,
+          that gap is usually the story.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>Free cash flow (FCF)</dt>
+        <dd>Operating cash flow minus capital expenditure — cash actually left over after keeping the
+          business running and paying for new capacity. A company can post record profit and negative
+          free cash flow at the same time, and one here does.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>RPO (remaining performance obligations)</dt>
+        <dd>Contracted revenue a company has signed but not yet delivered — the backlog. It is a
+          promise, not cash: it converts to revenue only as the service is delivered, and Oracle's
+          own management says most of its newest RPO won't touch revenue until fiscal 2028 or later.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>IaaS / SaaS</dt>
+        <dd>Infrastructure as a service (renting raw compute and storage — where the AI demand sits)
+          versus software as a service (renting finished applications). Oracle reports them separately
+          and they are growing at wildly different rates.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>IEEPA tariff refunds</dt>
+        <dd>Refunds of tariffs collected under the International Emergency Economic Powers Act.
+          e.l.f. received $50m of them in one quarter, which inflated that quarter's gross margin by
+          roughly 10.5 percentage points. It is a one-off, and the underlying margin matters more.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>Points of distribution / DPP</dt>
+        <dd>How many store shelves carry a product, and dollars per point of distribution — sales
+          divided by that shelf count. Rising DPP on falling shelf count means the remaining shelves
+          are working harder, which is what Celsius reported.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>SKU rationalisation</dt>
+        <dd>Deliberately cutting slow-selling product variants. It shrinks reported sales in the short
+          term by design, so a decline caused by it reads differently from a decline caused by lost demand.</dd>
+      </dl>
+      <dl class="gcard">
+        <dt>Consensus</dt>
+        <dd>The average of analysts' published forecasts. It is not company guidance. A "miss" means the
+          company came in under analysts' expectations, which is not the same as missing its own target.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ PROVENANCE ============ -->
+  <section id="provenance">
+    <div class="sec-head">
+      <div class="eyebrow">Read this before you act on anything above</div>
+      <h2>Where these numbers came from</h2>
+    </div>
+
+    <div class="notice warn">
+      <h3>
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path fill="var(--warning)" d="M10 1.6 19 17.4H1z"/><path fill="var(--ink)" d="M9.1 7.1h1.8v5.1H9.1zm0 6.2h1.8v1.8H9.1z"/></svg>
+        The statements here are substantially complete, but not line-complete
+      </h3>
+      <ul>
+        <li>Every figure was gathered through <b>web search result summaries</b>. Direct access to
+          <b>sec.gov</b>, the four investor-relations sites, <b>businesswire</b>, <b>nasdaq.com</b> and
+          the financial-data aggregators was <b>blocked by this environment's network egress policy</b>,
+          so the 10-Q and 8-K exhibits could not be read line by line.</li>
+        <li>Cells marked <span class="na">not retrieved</span> are lines I could not confirm. They are
+          left empty deliberately — nothing on this page is estimated, interpolated or filled in to look complete.</li>
+        <li>Cells marked with a <span class="derived">†</span> are <b>arithmetic I performed</b> from two
+          confirmed figures (for example cost of revenue as revenue minus gross profit). They are labelled
+          so you can tell them from as-reported lines.</li>
+        <li>Several figures are as-reported <b>roundings</b> — AMD reports "$11.5 billion", not a
+          to-the-dollar revenue line — so totals in the AMD income statement will not foot exactly.</li>
+        <li><b>Verify against the filing before you trade, model or report on any of this.</b> Treat this
+          page as a briefing that points you at the right quarter and the right question, not as a source
+          of record.</li>
+      </ul>
+    </div>
+
+    <div class="notice" style="margin-top:13px">
+      <h3>How the automatic refresh works</h3>
+      <ul>
+        <li>A scheduled job is set for each of the four report dates in the Refresh clock above. When a
+          company reports, that job wakes me, I pull the new quarter, and this page is rebuilt at the
+          same URL — the old latest quarter becomes the prior quarter and the bullets, guidance, quotes
+          and statements all roll forward.</li>
+        <li>The countdowns on this page are computed live in your browser, so they stay honest even
+          between refreshes.</li>
+        <li>Dates marked <b>estimated</b> are my projection from the company's historical reporting
+          pattern, not a confirmed announcement. e.l.f. and Oracle had not published their next date
+          when this was built.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Not investment advice.</b> This is a reading aid built from public earnings reports and call
+      coverage for four securities, assembled on 20 September 2026. Figures are as reported by the
+      companies and may be restated. Non-GAAP measures are management's own and are not comparable
+      between companies. Do your own verification against the primary filings.</p>
+  </footer>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var NA = null;            /* not retrieved */
+  var D  = function (v) { return { v: v, derived: true }; };  /* arithmetic I did */
+
+  /* ============================================================
+     DATA
+     Every numeric value below is either (a) as reported by the
+     company and surfaced in search results, or (b) wrapped in D()
+     meaning I computed it from two confirmed figures. NA means
+     the line could not be confirmed and is rendered empty.
+     Money in $ millions unless the unit says otherwise.
+     ============================================================ */
+
+  var HOLDINGS = [
+    /* ---------------------------------------------------------- AMD */
+    {
+      id: "amd", tk: "AMD", name: "Advanced Micro Devices", color: "var(--amd)",
+      what: "Server and client CPUs, and the Instinct GPU line that now competes for AI training and inference workloads.",
+      fiscal: "<b>Calendar fiscal year.</b> Quarters end on a Saturday, so Q2 FY26 closed 27 June 2026 — not 30 June. Worth knowing when you line AMD up against the others.",
+      verdict: { cls: "beat", txt: "Record quarter · guided above consensus" },
+      latest: { lab: "Q2 2026", per: "Quarter ended 27 Jun 2026", rep: "Reported 4 Aug 2026" },
+      prior:  { lab: "Q1 2026", per: "Quarter ended 28 Mar 2026", rep: "Reported 5 May 2026" },
+      next:   { lab: "Q3 2026", date: "2026-11-03", confirmed: true, note: "After market close" },
+      pulse: { rev: 11500, revLab: "$11.5B", growth: 50, eps: "$1.38", epsLab: "GAAP diluted EPS",
+               extra: [["Non-GAAP EPS", "$1.66"], ["Gross margin", "54%"], ["Free cash flow", "$1.56B"]] },
+
+      bullsLatest: [
+        { t: "<b>Revenue $11.5B, up 50% year over year</b> — a company record, and the first time AMD has printed a 50-handle growth rate at this revenue scale.", k: "pos" },
+        { t: "<b>Data Center revenue $6.7B, up 107%</b>. The segment more than doubled and now accounts for <span class='mono'>58%</span> of all company revenue — AMD is, by mix, a data centre company now.", k: "pos" },
+        { t: "GAAP gross margin <b>54%</b>, operating income <b>$2.0B</b> (17% of revenue), net income <b>$2.3B</b>, diluted EPS <b>$1.38</b>.", k: "" },
+        { t: "Non-GAAP net income <b>$2.8B</b>, EPS <b>$1.66</b>. Operating expenses rose 32% to $4.2B — faster than nothing, but well behind the 50% revenue growth, which is why margins held.", k: "" },
+        { t: "<b>Gaming fell 31%</b> to $779m, the one clear soft spot. Client rose 23% to $3.1B, so the combined Client and Gaming segment managed only +6% and its operating margin compressed to 15% from 21%.", k: "neg" },
+        { t: "Embedded returned to real growth: <b>$977m, up 19%</b> YoY and 12% sequentially, at a 40% segment operating margin — up from 33% a year ago.", k: "pos" },
+        { t: "Operating cash flow <b>$2,366m</b>, capex <b>$808m</b>, free cash flow <b>$1,558m</b> (14% of revenue).", k: "" },
+        { t: "Note the shape: <b>net income ($2.3B) exceeded operating income ($2.0B)</b>. That happens when items below the operating line — interest and investment income, equity earnings, or a tax benefit — add rather than subtract. It is not an error, but it means this quarter's net income is not purely operating.", k: "flag" }
+      ],
+      bullsPrior: [
+        { t: "Revenue <b>$10.3B, up 38%</b> — at the time itself a record, driven by Data Center and Client.", k: "pos" },
+        { t: "Data Center <b>$5.8B, up 57%</b>. One quarter later that growth rate nearly doubled to 107%, which is the single most important trend line on this page.", k: "pos" },
+        { t: "GAAP gross margin <b>53%</b>, operating income <b>$1.5B</b>, net income <b>$1.4B</b>, diluted EPS <b>$0.84</b>.", k: "" },
+        { t: "Non-GAAP: gross margin <b>55%</b> (up 170&nbsp;bps YoY on richer Data Center mix), operating income <b>$2.5B</b>, EPS <b>$1.37</b>.", k: "" },
+        { t: "Embedded returned to growth after a long inventory correction — the first sign that the non-AI half of AMD had stopped shrinking.", k: "pos" }
+      ],
+
+      guide: {
+        head: "Q3 2026 guidance, given 4 August",
+        items: [
+          { k: "Q3 revenue", v: "$12.7–13.3B", n: "Midpoint $13.0B, about +41% YoY" },
+          { k: "vs consensus", v: "Above", n: "Street was at roughly $12.5B" },
+          { k: "Implied sequential", v: "+13%", n: "At the midpoint, off Q2's $11.5B" }
+        ],
+        note: "AMD guides one quarter at a time and did not publish a full-year revenue target. The 2027 figures quoted on the call are management's directional commentary, not formal guidance — they are in the quotes below, kept separate on purpose."
+      },
+
+      quotes: [
+        { q: "We delivered an excellent quarter, with record revenue and profitability as Data Center revenue more than doubled year-over-year.", a: "Dr. Lisa Su, Chair and CEO", para: false },
+        { q: "We are entering the second half of the year with momentum as EPYC demand accelerates and our Helios rack-scale platform begins to ramp.", a: "Dr. Lisa Su, Chair and CEO", para: false },
+        { q: "The Helios platform is tracking ahead of initial internal forecasts, with production underway and shipments starting later this quarter, ramping more aggressively into 2027.", a: "Dr. Lisa Su on the Q2 2026 call", para: false },
+        { q: "HBM allocations for 2027 are fully locked in and visible, following co-planning with memory suppliers.", a: "Dr. Lisa Su on high-bandwidth memory supply", para: false },
+        { q: "Data Center segment revenue is expected to more than double year over year in 2027, with server CPU growth above 70% and data centre AI growth well over 100%. Server revenue should grow over 80% year over year in the second half of 2026.", a: "management's 2027 framing on the Q2 2026 call", para: true },
+        { q: "Frontier model companies including OpenAI, Anthropic and Meta are consuming through various cloud providers, with good customer diversity expected in Q4 and Q1.", a: "Dr. Lisa Su on AI customer concentration", para: true }
+      ],
+
+      charts: ["amdRev", "amdSeg"],
+
+      income: {
+        cols: ["Q2 2026", "Q1 2026"],
+        note: "AMD reports these headline figures rounded to the nearest $0.1B, so the column will not foot exactly. Segment detail sits in its own table below.",
+        rows: [
+          { l: "Revenue", v: [11500, 10300], sum: true },
+          { l: "Cost of revenue", v: [D(5300), NA] },
+          { l: "Gross profit", v: [6200, NA], sum: true },
+          { l: "Gross margin", v: ["54%", "53%"], pct: true },
+          { l: "spacer" },
+          { l: "Research and development", v: [NA, NA], detail: true },
+          { l: "Marketing, general and administrative", v: [NA, NA], detail: true },
+          { l: "Amortisation of acquisition-related intangibles", v: [NA, NA], detail: true },
+          { l: "Total operating expenses", v: [4200, NA], sum: true },
+          { l: "Operating income", v: [2000, 1500], sum: true },
+          { l: "Operating margin", v: ["17%", D("15%")], pct: true },
+          { l: "spacer" },
+          { l: "Interest and other income (expense), net", v: [NA, NA], detail: true },
+          { l: "Income tax provision", v: [NA, NA], detail: true },
+          { l: "Net income", v: [2300, 1400], sum: true },
+          { l: "Diluted earnings per share", v: ["$1.38", "$0.84"], pct: true, sum: true },
+          { l: "spacer" },
+          { l: "Non-GAAP gross margin", v: [NA, "55%"], pct: true, detail: true },
+          { l: "Non-GAAP operating income", v: [NA, 2500], detail: true },
+          { l: "Non-GAAP net income", v: [2800, 2300], detail: true },
+          { l: "Non-GAAP diluted EPS", v: ["$1.66", "$1.37"], pct: true }
+        ]
+      },
+      segments: {
+        cols: ["Q2 2026 revenue", "YoY", "Segment op. income", "Op. margin"],
+        rows: [
+          ["Data Center", "$6,700", "+107%", "not retrieved", "—"],
+          ["Client and Gaming", "$3,800", "+6%", "$582", "15% (was 21%)"],
+          ["— Client", "$3,100", "+23%", "—", "—"],
+          ["— Gaming", "$779", "−31%", "—", "—"],
+          ["Embedded", "$977", "+19%", "$386", "40% (was 33%)"]
+        ]
+      },
+      balance: {
+        cols: ["27 Jun 2026"],
+        note: "Prior-period column could not be retrieved, so no comparative is shown. Total liabilities is arithmetic from total assets less total equity.",
+        rows: [
+          { l: "Cash and cash equivalents", v: [5585] },
+          { l: "Short-term investments", v: [D(6715)], detail: true },
+          { l: "Cash and short-term investments", v: [12300], sum: true },
+          { l: "Accounts receivable, net", v: [NA], detail: true },
+          { l: "Inventories", v: [NA], detail: true },
+          { l: "Goodwill", v: [NA], detail: true },
+          { l: "Acquisition-related intangibles", v: [NA], detail: true },
+          { l: "Total assets", v: [79642], sum: true },
+          { l: "spacer" },
+          { l: "Total debt", v: [3871] },
+          { l: "Total liabilities", v: [D(15180)], sum: true },
+          { l: "Total stockholders' equity", v: [64462], sum: true }
+        ]
+      },
+      cash: {
+        cols: ["Q2 2026"],
+        note: "AMD disclosed operating cash flow, capex and free cash flow for the quarter. The full statement's financing and investing sections were not retrievable.",
+        rows: [
+          { l: "Net cash provided by operating activities", v: [2366], sum: true },
+          { l: "Operating cash flow margin", v: ["21%"], pct: true },
+          { l: "Purchases of property and equipment (capex)", v: [-808] },
+          { l: "Free cash flow", v: [1558], sum: true },
+          { l: "Free cash flow margin", v: ["14%"], pct: true },
+          { l: "spacer" },
+          { l: "Net cash used in investing activities", v: [NA], detail: true },
+          { l: "Repurchases of common stock", v: [NA], detail: true },
+          { l: "Net cash used in financing activities", v: [NA], detail: true }
+        ]
+      }
+    },
+
+    /* ---------------------------------------------------------- ORCL */
+    {
+      id: "orcl", tk: "ORCL", name: "Oracle", color: "var(--orcl)",
+      what: "Database and enterprise applications, plus the cloud infrastructure business now renting GPU capacity to AI model developers at very large scale.",
+      fiscal: "<b>Fiscal year ends 31 May.</b> So the quarter reported in September 2026 is <b>Q1 of fiscal 2027</b>, and the June report covered fiscal 2026's fourth quarter. Oracle's \"FY27\" is mostly calendar 2026.",
+      verdict: { cls: "mixed", txt: "Beat on revenue and EPS · free cash flow negative" },
+      latest: { lab: "Q1 FY2027", per: "Quarter ended 31 Aug 2026", rep: "Reported 10 Sep 2026" },
+      prior:  { lab: "Q4 FY2026", per: "Quarter ended 31 May 2026", rep: "Reported 10 Jun 2026" },
+      next:   { lab: "Q2 FY2027", date: "2026-12-10", confirmed: false, note: "Expected, based on prior years" },
+      pulse: { rev: 19350, revLab: "$19.35B", growth: 30, eps: "$1.92", epsLab: "Non-GAAP diluted EPS",
+               extra: [["Cloud revenue", "$11.6B"], ["RPO backlog", "$664B"], ["Free cash flow", "−$5.0B"]] },
+
+      bullsLatest: [
+        { t: "<b>Revenue $19.35B, up 30%</b> — ahead of the roughly $19.14B expected. Non-GAAP EPS <b>$1.92</b> versus $1.74 expected.", k: "pos" },
+        { t: "<b>Cloud revenue $11.6B, up 62%</b>, now 60% of the company. Inside that: infrastructure (IaaS) <b>$7.4B, up 121%</b>; applications (SaaS) up 10%.", k: "pos" },
+        { t: "The two halves are diverging hard. Infrastructure is compounding at triple digits; the applications business that used to define Oracle is growing at 10%.", k: "flag" },
+        { t: "GAAP operating income <b>$6.73B, up 57%</b>. GAAP net income available to common shareholders <b>$4.68B, up 60%</b>.", k: "pos" },
+        { t: "<b>RPO backlog $664B</b> — up $209B year over year and $26B from the prior quarter. Over <b>$30B of new AI contracts</b> were signed in the quarter.", k: "pos" },
+        { t: "<b>Operating cash flow $23B, up 184%</b> — a record first quarter. Then capex of <b>$28.5B</b> took free cash flow to <b>−$5B</b>.", k: "neg" },
+        { t: "That is the central tension in this quarter: record profit, record operating cash, and the company still consumed $5B of cash because it is building capacity faster than the revenue arrives.", k: "flag" },
+        { t: "Delivery metrics: <b>850&nbsp;MW</b> of AI capacity and <b>300,000+ GPUs</b> brought online — close to triple the prior quarter — at <b>97.9%</b> GPU utilisation. The capacity is not sitting idle.", k: "pos" }
+      ],
+      bullsPrior: [
+        { t: "Revenue <b>$19.2B, up 21%</b> (20% in constant currency). Total cloud <b>$9.9B, up 47%</b>.", k: "pos" },
+        { t: "IaaS <b>$5.8B, up 93%</b>; SaaS <b>$4.1B, up 10%</b>. The same split, one quarter earlier and one gear lower.", k: "" },
+        { t: "GAAP EPS <b>$1.45</b> (+21%); non-GAAP EPS <b>$2.11</b> (+24%).", k: "" },
+        { t: "<b>RPO $638B</b>, up 363% year over year and $85B sequentially — the quarter the backlog story broke open.", k: "pos" },
+        { t: "Management disclosed that the prepaid and customer-supplied-hardware portions of the large AI contracts then totalled <b>$75B</b> — i.e. a large slice of the backlog arrives with its own funding or its own GPUs.", k: "flag" },
+        { t: "Full fiscal 2026: revenue <b>$67.4B, up 17%</b>; cloud revenue <b>$34.0B, up 39%</b>.", k: "" }
+      ],
+
+      guide: {
+        head: "Fiscal 2027 guidance, raised 10 September",
+        items: [
+          { k: "FY27 revenue", v: "≥ $90B", n: "Raised; implies about +34% on FY26's $67.4B" },
+          { k: "FY27 non-GAAP EPS", v: "$8.10", n: "Company target" },
+          { k: "FY27 capital spending", v: "$90–95B", n: "Roughly equal to a full year of revenue" }
+        ],
+        note: "Read those three together: Oracle intends to spend about as much on capacity this year as it earns in revenue. Management's position is that the newest contracts are structured so this does not require incremental Oracle capital — the customer prepays or supplies the GPUs. That claim is the load-bearing assumption in the whole story."
+      },
+
+      quotes: [
+        { q: "New Mexico construction is on track and we are working through the air permit using Bloom fuel cells; Wisconsin data centre delivery is on track with grid energy partners. Neither site will have any impact on previously stated FY27 revenue or earnings guidance.", a: "Clay Magouyrk, CEO", para: true },
+        { q: "The vast majority of the more than $30 billion in new AI contracts signed during the quarter came through prepayment, bring-your-own-hardware, or similar structures, so they will not require incremental capital from Oracle.", a: "management on contract structure", para: true },
+        { q: "That new RPO won't impact capital expenditure or revenues until fiscal 2028 or beyond.", a: "management on backlog timing", para: true },
+        { q: "Most of the RPO increase were large scale AI contracts where the customer prepaid Oracle for the purchase of the GPUs, or the customer bought and supplied the GPUs to Oracle.", a: "Q4 FY2026 release, on the $75B disclosure", para: false }
+      ],
+
+      charts: ["orclRpo", "orclMix"],
+
+      income: {
+        cols: ["Q1 FY2027", "Q4 FY2026"],
+        note: "Oracle reports revenue and cost lines by category rather than a single consolidated gross profit line, so no gross margin row is shown. Percentages in brackets are the company's own \"% of revenues\" disclosures.",
+        rows: [
+          { l: "Cloud services and license support — cloud", v: [11600, 9900], sum: true },
+          { l: "— Cloud infrastructure (IaaS)", v: [7400, 5800], indent: true },
+          { l: "— Cloud applications (SaaS)", v: [D(4200), 4100], indent: true },
+          { l: "Software (license support and license)", v: [5550, NA], detail: true },
+          { l: "Hardware", v: [774, NA], detail: true },
+          { l: "Services", v: [1414, NA], detail: true },
+          { l: "Total revenues", v: [19350, 19200], sum: true },
+          { l: "spacer" },
+          { l: "Cloud and software expenses", v: [6400, NA], detail: true },
+          { l: "Hardware expenses", v: [281, NA], detail: true },
+          { l: "Services expenses", v: [1052, NA], detail: true },
+          { l: "Research and development", v: [NA, NA], detail: true },
+          { l: "Sales and marketing", v: [NA, NA], detail: true },
+          { l: "General and administrative", v: [NA, NA], detail: true },
+          { l: "Total operating expenses", v: [NA, NA], sum: true },
+          { l: "Operating income (GAAP)", v: [6730, NA], sum: true },
+          { l: "spacer" },
+          { l: "Interest expense", v: [NA, NA], detail: true },
+          { l: "Income tax provision", v: [NA, NA], detail: true },
+          { l: "Net income available to common stockholders", v: [4680, NA], sum: true },
+          { l: "GAAP diluted earnings per share", v: [NA, "$1.45"], pct: true },
+          { l: "Non-GAAP diluted earnings per share", v: ["$1.92", "$2.11"], pct: true, sum: true },
+          { l: "spacer" },
+          { l: "Remaining performance obligations (RPO)", v: [664000, 638000], sum: true }
+        ]
+      },
+      balance: {
+        cols: ["31 Aug 2026"],
+        note: "Total equity could not be confirmed at 31 Aug 2026; the figure shown is the 31 May 2026 fiscal-year-end balance and is labelled as such. Total debt is the sum of the current and non-current borrowing lines.",
+        rows: [
+          { l: "Cash and cash equivalents", v: [36369] },
+          { l: "Marketable securities", v: [NA], detail: true },
+          { l: "Trade receivables, net", v: [NA], detail: true },
+          { l: "Property, plant and equipment, net", v: [NA], detail: true },
+          { l: "Goodwill and intangible assets", v: [NA], detail: true },
+          { l: "Total assets", v: [303259], sum: true },
+          { l: "spacer" },
+          { l: "Notes payable and other borrowings, current", v: [7625] },
+          { l: "Notes payable and other borrowings, non-current", v: [117712] },
+          { l: "Total debt", v: [D(125337)], sum: true },
+          { l: "Total liabilities", v: [NA], sum: true },
+          { l: "Total stockholders' equity (at 31 May 2026)", v: [67196], sum: true }
+        ]
+      },
+      cash: {
+        cols: ["Q1 FY2027"],
+        note: "Oracle also disclosed that net cash capex after customer prepayments was about $18B — i.e. roughly $10.5B of the quarter's capacity spending was funded by customers rather than by Oracle.",
+        rows: [
+          { l: "Net cash provided by operating activities", v: [23000], sum: true },
+          { l: "Capital expenditures", v: [-28500] },
+          { l: "Free cash flow", v: [-5000], sum: true },
+          { l: "Net cash capex after customer prepayments", v: [-18000], detail: true },
+          { l: "spacer" },
+          { l: "Net cash used in investing activities", v: [NA], detail: true },
+          { l: "Dividends paid", v: [NA], detail: true },
+          { l: "Repurchases of common stock", v: [NA], detail: true },
+          { l: "Net cash from financing activities", v: [NA], detail: true }
+        ]
+      }
+    },
+
+    /* ---------------------------------------------------------- ELF */
+    {
+      id: "elf", tk: "ELF", name: "e.l.f. Beauty", color: "var(--elf)",
+      what: "Mass-market cosmetics and skincare — the e.l.f. core brand plus Naturium, e.l.f. SKIN, e.l.f. Hair and the acquired rhode brand.",
+      fiscal: "<b>Fiscal year ends 31 March.</b> The quarter reported in August 2026 is <b>Q1 of fiscal 2027</b> (April–June 2026). When e.l.f. says \"fiscal 2027\" it means the year ending March 2027.",
+      verdict: { cls: "beat", txt: "Guidance raised sharply · margin flattered by a one-off" },
+      latest: { lab: "Q1 FY2027", per: "Quarter ended 30 Jun 2026", rep: "Reported 5 Aug 2026" },
+      prior:  { lab: "Q4 FY2026", per: "Quarter ended 31 Mar 2026", rep: "Reported 20 May 2026" },
+      next:   { lab: "Q2 FY2027", date: "2026-11-05", confirmed: false, note: "Expected early Nov, not yet confirmed" },
+      pulse: { rev: 479.4, revLab: "$479.4M", growth: 36, eps: "$1.12", epsLab: "GAAP diluted EPS",
+               extra: [["Adjusted EPS", "$1.75"], ["Gross margin", "83%"], ["Adj. EBITDA", "$168.2M"]] },
+
+      bullsLatest: [
+        { t: "<b>Net sales $479.4m, up 36%</b> — the <b>30th consecutive quarter</b> of net sales growth, which is over seven straight years.", k: "pos" },
+        { t: "<b>rhode contributed $160m</b> of net sales and beat the company's own internal expectations. That is a third of the quarter's revenue from a brand acquired recently.", k: "pos" },
+        { t: "<b>Gross margin 83%, up roughly 1,400&nbsp;bps</b> — but about <b>1,050 bps of that is IEEPA tariff refunds</b>. Strip the refunds and the underlying margin is near 72.5%, roughly flat on the prior quarter's 73%.", k: "flag" },
+        { t: "The company received <b>$50m in tariff refunds</b> in the quarter, and adjusted EPS of $1.75 includes a <b>$0.68 benefit</b> from them. Nearly 40% of adjusted EPS is a one-off.", k: "flag" },
+        { t: "GAAP net income <b>$66.6m</b>; adjusted net income <b>$104.6m</b>. GAAP diluted EPS <b>$1.12</b>, adjusted <b>$1.75</b>.", k: "" },
+        { t: "Adjusted EBITDA <b>$168.2m</b>, 35% of net sales, <b>up 93%</b> — or <b>up 36%</b> excluding the tariff refunds. The second number is the one to carry forward.", k: "" },
+        { t: "<b>Operating cash flow $111.7m</b>, against $27.2m a year earlier — a fourfold improvement and the cleanest signal in the quarter.", k: "pos" },
+        { t: "Balance sheet moved a lot year on year: cash <b>$344.2m</b> (from $170.0m) but total debt <b>$834.2m</b> (from $256.7m), reflecting the acquisition.", k: "flag" }
+      ],
+      bullsPrior: [
+        { t: "Net sales <b>$449.3m, up 35%</b>, on growth in both retailer and e-commerce channels, US and international.", k: "pos" },
+        { t: "Gross margin <b>73%, up about 140&nbsp;bps</b>, driven by pricing and partly offset by higher tariffs. This is the clean comparison point for the 83% that followed.", k: "" },
+        { t: "Full fiscal 2026: net sales <b>$1,636.5m, up 25%</b>.", k: "pos" },
+        { t: "Full-year GAAP net income was only <b>$26.3m</b> against adjusted net income of <b>$185.9m</b> — a $160m gap. For a company with this GAAP/non-GAAP spread, reading only the adjusted number gives a badly distorted picture.", k: "flag" },
+        { t: "Management was publicly weighing price cuts at this point, which is exactly what the tariff refunds later funded.", k: "" }
+      ],
+
+      guide: {
+        head: "Fiscal 2027 guidance, raised 5 August",
+        items: [
+          { k: "FY27 net sales", v: "$1.938–1.968B", n: "+18% to +20%" },
+          { k: "Previous guidance", v: "+12% to +14%", n: "Raised by six points at the midpoint" },
+          { k: "Implied on FY26", v: "from $1,636.5m", n: "About $300m of incremental sales" }
+        ],
+        note: "The raise is real but it is not all organic margin upside: management said it intends to reinvest the entirety of the tariff refunds into marketing and selective price reductions to drive unit volume. In other words the one-off cash is being spent to buy growth, not banked as profit — which is why the sales guide went up while the margin benefit should fade."
+      },
+
+      quotes: [
+        { q: "I'm proud of the e.l.f. Beauty team for achieving another quarter of industry-leading results. In Q1, we delivered 36% net sales growth, marking our 30th consecutive quarter – over seven continuous years – of net sales growth. This consistent, category-leading growth is a testament to the strength of our team, strategy, and portfolio of brands. With the momentum we're seeing, we're raising our fiscal 2027 outlook to 18 to 20 percent net sales growth from 12 to 14 percent previously.", a: "Tarang Amin, Chairman and CEO", para: false },
+        { q: "The company intends to reinvest the entirety of the tariff refunds into marketing initiatives and selective price reductions to stimulate unit volume momentum.", a: "management on use of the $50m refund", para: true },
+        { q: "e.l.f. will expand e.l.f. Hair, e.l.f. SKIN, Naturium and rhode across new retailers and international markets.", a: "management on the growth plan", para: true }
+      ],
+
+      charts: ["elfMargin", "elfGuide"],
+
+      income: {
+        cols: ["Q1 FY2027", "Q4 FY2026"],
+        note: "e.l.f. reports a single consolidated SG&A line rather than separate selling and marketing lines; neither it nor GAAP operating income was retrievable for these quarters. Gross margin is as reported (\"approximately\").",
+        rows: [
+          { l: "Net sales", v: [479.4, 449.3], sum: true },
+          { l: "Cost of sales", v: [NA, NA], detail: true },
+          { l: "Gross profit", v: [NA, NA], sum: true },
+          { l: "Gross margin", v: ["~83%", "~73%"], pct: true },
+          { l: "Gross margin excluding tariff refunds", v: [D("~72.5%"), "~73%"], pct: true, detail: true },
+          { l: "spacer" },
+          { l: "Selling, general and administrative", v: [NA, NA], detail: true },
+          { l: "Operating income", v: [NA, NA], sum: true },
+          { l: "Interest expense, net", v: [NA, NA], detail: true },
+          { l: "Income tax provision", v: [NA, NA], detail: true },
+          { l: "Net income (GAAP)", v: [66.6, NA], sum: true },
+          { l: "GAAP diluted earnings per share", v: ["$1.12", NA], pct: true },
+          { l: "spacer" },
+          { l: "Adjusted net income", v: [104.6, NA], detail: true },
+          { l: "Adjusted diluted EPS", v: ["$1.75", NA], pct: true },
+          { l: "— of which tariff refund benefit", v: ["$0.68", "—"], pct: true, indent: true },
+          { l: "Adjusted EBITDA", v: [168.2, NA], sum: true },
+          { l: "Adjusted EBITDA margin", v: ["35%", NA], pct: true },
+          { l: "spacer" },
+          { l: "Memo: rhode brand net sales", v: [160.0, NA], detail: true },
+          { l: "Memo: IEEPA tariff refunds received", v: [50.0, NA], detail: true }
+        ]
+      },
+      balance: {
+        cols: ["30 Jun 2026", "30 Jun 2025"],
+        note: "Cash and total debt are disclosed for both dates. The asset-side detail is from the 30 June 2026 balance sheet only; total assets and equity are as-reported roundings, so the sheet will not foot exactly.",
+        rows: [
+          { l: "Cash and cash equivalents", v: [344.241, 170.0] },
+          { l: "Inventory, net", v: [246.814, NA] },
+          { l: "Goodwill", v: [853.475, NA], detail: true },
+          { l: "Total assets", v: [2390, NA], sum: true },
+          { l: "spacer" },
+          { l: "Current portion of long-term debt", v: [30.0, NA], detail: true },
+          { l: "Total debt", v: [834.2, 256.7], sum: true },
+          { l: "Total liabilities", v: [D(1190), NA], sum: true },
+          { l: "Total stockholders' equity", v: [1200, NA], sum: true }
+        ]
+      },
+      cash: {
+        cols: ["Q1 FY2027", "Q1 FY2026"],
+        note: "Operating cash flow is disclosed for both periods. Capital expenditure was not retrievable, so free cash flow cannot be computed — this is why e.l.f.'s panel in the cash engine above shows a hatched capex track.",
+        rows: [
+          { l: "Net cash provided by operating activities", v: [111.7, 27.2], sum: true },
+          { l: "Capital expenditures", v: [NA, NA] },
+          { l: "Free cash flow", v: [NA, NA], sum: true },
+          { l: "spacer" },
+          { l: "Net cash used in investing activities", v: [NA, NA], detail: true },
+          { l: "Net cash from financing activities", v: [NA, NA], detail: true }
+        ]
+      }
+    },
+
+    /* ---------------------------------------------------------- CELH */
+    {
+      id: "celh", tk: "CELH", name: "Celsius Holdings", color: "var(--celh)",
+      what: "Energy drinks — the CELSIUS core brand plus the acquired Alani Nu and Rockstar brands, sold mainly through US retail and Pepsi distribution.",
+      fiscal: "<b>Calendar fiscal year.</b> Straightforward quarters. The wrinkle here is acquisitions: Alani Nu and Rockstar joined at different points, so year-over-year growth swings violently depending on whether the comparison quarter included them.",
+      verdict: { cls: "miss", txt: "Missed consensus on revenue and EPS · margin compressed" },
+      latest: { lab: "Q2 2026", per: "Quarter ended 30 Jun 2026", rep: "Reported 6 Aug 2026" },
+      prior:  { lab: "Q1 2026", per: "Quarter ended 31 Mar 2026", rep: "Reported 7 May 2026" },
+      next:   { lab: "Q3 2026", date: "2026-11-05", confirmed: true, note: "After market close" },
+      pulse: { rev: 817.9, revLab: "$817.9M", growth: 11, eps: "$0.14", epsLab: "GAAP diluted EPS",
+               extra: [["Adjusted EPS", "$0.36"], ["Gross margin", "48.1%"], ["Adj. EBITDA", "$184.2M"]] },
+
+      bullsLatest: [
+        { t: "<b>Revenue $817.9m, up 11%</b> from $739.3m. North America $790.7m, international $27.2m.", k: "" },
+        { t: "<b>This was a miss, and a wide one.</b> Consensus sat at about <b>$887.7m</b> revenue and <b>$0.42</b> EPS; Celsius delivered $817.9m and $0.36 adjusted. Revenue came in roughly $70m — about 8% — light.", k: "neg" },
+        { t: "<b>Gross margin 48.1%, down 340&nbsp;bps</b> from 51.5%, on heavier promotional and incentive activity and channel mix, partly offset by integration benefits and the absence of last year's Alani Nu inventory step-up cost.", k: "neg" },
+        { t: "<b>Adjusted EBITDA $184.2m fell 12%</b> year over year to a 22.5% margin. Revenue grew 11% while EBITDA shrank 12% — the gap between those two numbers is the whole quarter.", k: "neg" },
+        { t: "Net income attributable to common shareholders <b>$36.4m, down from $85.7m</b>. GAAP diluted EPS <b>$0.14</b>; adjusted <b>$0.36</b>.", k: "neg" },
+        { t: "<b>Alani Nu is working.</b> Net sales up 21%, tracked retail sales up about 56%, and the brand passed <b>$1bn in tracked retail sales in the first half of 2026</b> alone.", k: "pos" },
+        { t: "<b>Core CELSIUS net sales fell 12%</b> on SKU rationalisation and inventory rebalancing — partly deliberate. Dollars per point of distribution rose 16% from Q1 to Q2 even as shelf presence fell 7%, so the remaining placements are selling harder.", k: "flag" },
+        { t: "Rockstar integration finished on its nine-month timeline, fully on the company's platform, with early velocity gains reported.", k: "pos" },
+        { t: "Costs came down below the line: SG&A was <b>29.0% of revenue</b> versus 32.2%, interest expense fell $6.5m after the Q4 2025 refinancing, and the tax rate improved to 20.5% from 22.9%.", k: "pos" }
+      ],
+      bullsPrior: [
+        { t: "Revenue <b>$783.0m, up 138%</b> — the acquisitions landing in the comparison. North America $747.3m (+144%), international $35.3m (+55%).", k: "pos" },
+        { t: "Gross margin <b>48.3%</b>, down from 52.3%, on higher aluminium premiums, freight and promotional costs. Note the margin was already compressing here — Q2 continued a trend rather than starting one.", k: "flag" },
+        { t: "GAAP net income <b>$110.1m (+148%)</b>; attributable to common shareholders <b>$85.1m</b>; diluted EPS <b>$0.33 (+120%)</b>.", k: "pos" },
+        { t: "Adjusted EBITDA <b>$195.5m, up 181%</b>, margin expanding to <b>25.0%</b> from 21.2%. One quarter later that margin was 22.5% and falling.", k: "pos" },
+        { t: "Brand split: CELSIUS <b>$348.0m (+6%)</b>, Alani Nu <b>$368.1m</b>, Rockstar <b>$67.0m</b>. Alani Nu outsold the namesake brand.", k: "flag" },
+        { t: "Operating cash flow was <b>$73.7m</b>, down from $103.4m a year earlier despite net income up 148% — working capital absorbing the growth.", k: "flag" }
+      ],
+
+      guide: {
+        head: "Outlook — note that Celsius does not give formal numeric guidance",
+        items: [
+          { k: "Q3 2026 shape", v: "Similar to Q2", n: "Management's qualitative framing" },
+          { k: "Margin", v: "Expansion expected", n: "Through the rest of 2026 as integration matures" },
+          { k: "Growth inflection", v: "2027", n: "Return to growth plus \"major innovation\"" }
+        ],
+        note: "The figures often quoted for full-year 2026 — about $3,294.7m of revenue and $1.46 of EPS — are the <b>analyst consensus, not company guidance</b>. Celsius issues directional commentary only. Given the quarter just missed consensus by 8%, treat that full-year number as an expectation the company has not endorsed."
+      },
+
+      quotes: [
+        { q: "Alani Nu surpassed $1 billion in retail sales in tracked channels in the first half of 2026, with tracked channel dollar growth of approximately 56% in the quarter.", a: "management on the Q2 2026 call", para: true },
+        { q: "Dollars per point of distribution for brand CELSIUS increased 16% from the first quarter to the second, despite a 7% reduction in points of distribution.", a: "management on core-brand productivity", para: true },
+        { q: "The Rockstar integration was completed on the nine-month timeline, with the brand now fully on the company's platform and showing early velocity gains.", a: "management on integration", para: true },
+        { q: "Management expects margin expansion in the remainder of 2026 as integration and optimization initiatives mature, a similar Q3, and a return to growth with major innovation in 2027.", a: "management's forward commentary", para: true }
+      ],
+
+      charts: ["celhRev", "celhMargin"],
+
+      income: {
+        cols: ["Q2 2026", "Q1 2026"],
+        note: "Celsius reports revenue by geography and discloses brand-level net sales in commentary. GAAP operating income was not retrievable for either quarter; adjusted EBITDA is the company's headline profit measure.",
+        rows: [
+          { l: "Revenue", v: [817.9, 783.0], sum: true },
+          { l: "— North America", v: [790.7, 747.3], indent: true },
+          { l: "— International", v: [27.2, 35.3], indent: true },
+          { l: "Cost of revenue", v: [D(424.2), NA] },
+          { l: "Gross profit", v: [393.7, NA], sum: true },
+          { l: "Gross margin", v: ["48.1%", "48.3%"], pct: true },
+          { l: "spacer" },
+          { l: "Selling, general and administrative", v: [237.6, NA] },
+          { l: "SG&A as % of revenue", v: ["29.0%", NA], pct: true, detail: true },
+          { l: "Adjusted SG&A as % of revenue", v: ["28.6%", NA], pct: true, detail: true },
+          { l: "Operating income", v: [NA, NA], sum: true },
+          { l: "spacer" },
+          { l: "Effective income tax rate", v: ["20.5%", NA], pct: true, detail: true },
+          { l: "Net income (GAAP, total)", v: [NA, 110.1], detail: true },
+          { l: "Net income attributable to common shareholders", v: [36.4, 85.1], sum: true },
+          { l: "Diluted earnings per share", v: ["$0.14", "$0.33"], pct: true, sum: true },
+          { l: "Adjusted diluted earnings per share", v: ["$0.36", NA], pct: true },
+          { l: "spacer" },
+          { l: "Adjusted EBITDA", v: [184.2, 195.5], sum: true },
+          { l: "Adjusted EBITDA margin", v: ["22.5%", "25.0%"], pct: true },
+          { l: "spacer" },
+          { l: "Memo: CELSIUS brand net sales", v: [NA, 348.0], detail: true },
+          { l: "Memo: Alani Nu brand net sales", v: [NA, 368.1], detail: true },
+          { l: "Memo: Rockstar brand net sales", v: [NA, 67.0], detail: true }
+        ]
+      },
+      balance: {
+        cols: ["30 Jun 2026"],
+        note: "Celsius disclosed its liquidity position and debt structure but the full balance sheet — total assets, inventory, goodwill and equity — was not retrievable in this session.",
+        rows: [
+          { l: "Cash and cash equivalents (unrestricted)", v: [631.2], sum: true },
+          { l: "Net working capital", v: [832.3] },
+          { l: "Inventory", v: [NA], detail: true },
+          { l: "Goodwill and intangible assets", v: [NA], detail: true },
+          { l: "Total assets", v: [NA], sum: true },
+          { l: "spacer" },
+          { l: "Term loan due 2032 (face amount)", v: [694.75] },
+          { l: "Unamortised discount and issuance costs", v: [-19.9], detail: true },
+          { l: "Long-term debt, net", v: [667.85], sum: true },
+          { l: "Total liabilities", v: [NA], sum: true },
+          { l: "Total stockholders' equity", v: [NA], sum: true }
+        ]
+      },
+      cash: {
+        cols: ["Q1 2026", "Q1 2025"],
+        note: "Only the three-month period to 31 March 2026 was retrievable. The six-month cash flow statement covering the latest quarter was not, so no Q2 or first-half cash figure is shown rather than an estimate.",
+        rows: [
+          { l: "Net cash provided by operating activities", v: [73.7, 103.4], sum: true },
+          { l: "Net cash used in investing activities", v: [-7.7, -6.9] },
+          { l: "Net cash from financing activities", v: [NA, NA], detail: true },
+          { l: "spacer" },
+          { l: "Capital expenditures", v: [NA, NA] },
+          { l: "Free cash flow", v: [NA, NA], sum: true }
+        ]
+      }
+    }
+  ];
+
+  /* ============================================================
+     FORMATTING
+     ============================================================ */
+  function fmtM(n) {
+    if (n === null || n === undefined) return "—";
+    var neg = n < 0, a = Math.abs(n), s;
+    if (a >= 1000) s = a.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    else if (a >= 100) s = a.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    else s = a.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 3 });
+    return (neg ? "(" + s + ")" : s);
+  }
+  function fmtB(n) { return "$" + (n / 1000).toFixed(n / 1000 >= 100 ? 0 : 1) + "B"; }
+  function pctStr(n) { return (n > 0 ? "+" : "") + n + "%"; }
+
+  var tip = document.getElementById("tip");
+  function bindTip(node, html) {
+    node.setAttribute("tabindex", "0");
+    function show(e) {
+      tip.innerHTML = html;
+      tip.classList.add("on");
+      var r = node.getBoundingClientRect();
+      var x = e && e.clientX ? e.clientX : r.left + r.width / 2;
+      tip.style.left = Math.max(120, Math.min(window.innerWidth - 120, x)) + "px";
+      tip.style.top = r.top + "px";
+    }
+    function hide() { tip.classList.remove("on"); }
+    node.addEventListener("pointerenter", show);
+    node.addEventListener("pointermove", show);
+    node.addEventListener("pointerleave", hide);
+    node.addEventListener("focus", show);
+    node.addEventListener("blur", hide);
+  }
+
+  /* ============================================================
+     CHART BUILDERS — plain HTML/CSS, one scale per chart
+     ============================================================ */
+
+  /* horizontal bars: rows = [{label, value, color, fmt, missing, note}] */
+  function hBars(host, cfg) {
+    var max = 0;
+    cfg.rows.forEach(function (r) { if (!r.missing) max = Math.max(max, Math.abs(r.value)); });
+    /* Hold the longest bar at ~72% of the track so its value label always has
+       room to sit outside the fill rather than on top of it. */
+    max = cfg.max || max / 0.72;
+
+    var head = '<div class="chart-head"><div class="chart-title">' + cfg.title + '</div>' +
+               '<div class="chart-sub">' + cfg.sub + '</div></div>';
+    var box = document.createElement("div");
+    box.className = "hbars";
+
+    cfg.rows.forEach(function (r) {
+      var row = document.createElement("div");
+      row.className = "hrow";
+      row.style.setProperty("--c", r.color);
+
+      var pct = r.missing ? 0 : Math.abs(r.value) / max * 100;
+
+      row.innerHTML =
+        '<div class="hl"><span class="dot"></span>' + r.label + '</div>' +
+        '<div class="htrack' + (r.missing ? " missing" : "") + '">' +
+          (r.missing ? '' :
+            '<div class="hfill' + (r.value < 0 ? " neg" : "") + '" style="width:' + pct.toFixed(2) + '%"></div>') +
+          '<span class="hval" style="--w:' + pct.toFixed(2) + '%">' +
+            (r.missing ? r.missingLabel : r.display) +
+          '</span>' +
+        '</div>';
+
+      var track = row.querySelector(".htrack");
+      bindTip(track, "<b>" + r.label + "</b>" + (r.missing ? r.missingLabel : r.display) +
+              (r.note ? "<br>" + r.note : ""));
+      box.appendChild(row);
+    });
+
+    host.innerHTML = head;
+    host.appendChild(box);
+    if (cfg.readme) {
+      var rm = document.createElement("div");
+      rm.className = "readme";
+      rm.innerHTML = cfg.readme;
+      host.appendChild(rm);
+    }
+  }
+
+  /* round a scale maximum up to a readable value so axis labels are clean */
+  function niceMax(raw) {
+    if (raw <= 0) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var steps = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    for (var i = 0; i < steps.length; i++) {
+      if (steps[i] * mag >= raw) return steps[i] * mag;
+    }
+    return 10 * mag;
+  }
+
+  /* vertical columns: bars = [{label, sub, value, color, guide, stack:[{v,color,name}]}] */
+  var PLOT_PAD = 22;   /* px of label room above the tallest bar */
+
+  function columns(host, cfg) {
+    var max = 0;
+    cfg.bars.forEach(function (b) {
+      var tot = b.stack ? b.stack.reduce(function (s, x) { return s + x.v; }, 0) : b.value;
+      max = Math.max(max, tot);
+    });
+    max = cfg.max || niceMax(max * 1.08);
+
+    var head = '<div class="chart-head"><div class="chart-title">' + cfg.title + '</div>' +
+               '<div class="chart-sub">' + cfg.sub + '</div></div>';
+
+    var cols = document.createElement("div");
+    cols.className = "cols";
+    var plot = document.createElement("div");
+    plot.className = "plot";
+
+    /* Gridlines. Bars scale to the plot's CONTENT height (total height minus the
+       label padding at the top), so the gridlines must use the same basis or the
+       top line would sit above the value it claims to mark. */
+    [1, 0.5].forEach(function (f) {
+      var g = document.createElement("div");
+      g.className = "gridline";
+      g.style.bottom = "calc((100% - " + PLOT_PAD + "px) * " + f + ")";
+      g.innerHTML = '<span>' + cfg.axisFmt(max * f) + '</span>';
+      plot.appendChild(g);
+    });
+    var z = document.createElement("div");
+    z.className = "zero";
+    plot.appendChild(z);
+
+    cfg.bars.forEach(function (b) {
+      var col = document.createElement("div");
+      col.className = "col";
+      var tot = b.stack ? b.stack.reduce(function (s, x) { return s + x.v; }, 0) : b.value;
+      var h = (tot / max * 100);
+
+      var bar = document.createElement("div");
+      bar.className = "bar" + (b.guide ? " guide" : "") + (b.stack ? " stack" : "");
+      bar.style.height = h.toFixed(2) + "%";
+      bar.style.setProperty("--c", b.color);
+
+      if (b.stack) {
+        b.stack.forEach(function (s) {
+          var seg = document.createElement("div");
+          seg.className = "seg";
+          seg.style.background = s.color;
+          seg.style.height = (s.v / tot * 100).toFixed(2) + "%";
+          bar.appendChild(seg);
+          bindTip(seg, "<b>" + s.name + "</b>" + cfg.valFmt(s.v));
+        });
+      }
+
+      var tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = b.display;
+      bar.appendChild(tag);
+
+      if (!b.stack) bindTip(bar, "<b>" + b.label + "</b>" + b.display + (b.note ? "<br>" + b.note : ""));
+
+      col.appendChild(bar);
+      plot.appendChild(col);
+    });
+
+    var ax = document.createElement("div");
+    ax.className = "xaxis";
+    cfg.bars.forEach(function (b) {
+      var d = document.createElement("div");
+      d.innerHTML = "<b>" + b.label + "</b>" + (b.sub || "");
+      ax.appendChild(d);
+    });
+
+    cols.appendChild(plot);
+    cols.appendChild(ax);
+    host.innerHTML = head;
+    host.appendChild(cols);
+
+    if (cfg.legend) {
+      var lg = document.createElement("div");
+      lg.className = "legend";
+      lg.innerHTML = cfg.legend.map(function (l) {
+        return '<span class="lgi"><span class="sw" style="background:' + l.c + '"></span>' + l.t + '</span>';
+      }).join("");
+      host.appendChild(lg);
+    }
+    if (cfg.readme) {
+      var rm = document.createElement("div");
+      rm.className = "readme";
+      rm.innerHTML = cfg.readme;
+      host.appendChild(rm);
+    }
+  }
+
+  /* ============================================================
+     RADAR + PULSE
+     ============================================================ */
+  var TODAY = new Date();
+
+  function daysTo(iso) {
+    var d = new Date(iso + "T21:00:00Z");
+    return Math.ceil((d - TODAY) / 86400000);
+  }
+  function prettyDate(iso) {
+    var d = new Date(iso + "T12:00:00Z");
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  }
+
+  var radar = document.getElementById("radarCards");
+  HOLDINGS.slice().sort(function (a, b) { return daysTo(a.next.date) - daysTo(b.next.date); })
+    .forEach(function (h) {
+      var n = daysTo(h.next.date);
+      var c = document.createElement("div");
+      c.className = "rcard";
+      c.style.setProperty("--c", h.color);
+      c.innerHTML =
+        '<div class="tk">' + h.tk + '</div>' +
+        '<div class="countdown">' + (n > 0 ? n : 0) + ' <small>' + (n === 1 ? "day" : "days") + '</small></div>' +
+        '<div class="when"><b>' + h.next.lab + '</b> · ' + prettyDate(h.next.date) + '<br>' + h.next.note + '</div>' +
+        '<span class="conf ' + (h.next.confirmed ? "yes" : "est") + '">' +
+          (h.next.confirmed ? "Date confirmed" : "Date estimated") + '</span>';
+      radar.appendChild(c);
+    });
+
+  var pulse = document.getElementById("pulseTiles");
+  HOLDINGS.forEach(function (h) {
+    var t = document.createElement("div");
+    t.className = "tile";
+    t.style.setProperty("--c", h.color);
+    t.innerHTML =
+      '<div class="th"><span class="dot"></span><span class="tk">' + h.tk + '</span>' +
+        '<span class="qlab">' + h.latest.lab + '</span></div>' +
+      '<div class="big">' + h.pulse.revLab + '</div>' +
+      '<div class="sub">revenue · <span class="delta up"><span class="arw">▲</span>' +
+        pctStr(h.pulse.growth) + ' YoY</span></div>' +
+      '<div class="strip">' +
+        '<div>' + h.pulse.epsLab + '<b>' + h.pulse.eps + '</b></div>' +
+        h.pulse.extra.map(function (e) {
+          var neg = /^−|^-/.test(e[1]);
+          return '<div>' + e[0] + '<b' + (neg ? ' style="color:var(--crit-ink)"' : '') + '>' + e[1] + '</b></div>';
+        }).join("") +
+      '</div>';
+    pulse.appendChild(t);
+  });
+
+  /* ============================================================
+     CROSS-PORTFOLIO CHARTS
+     ============================================================ */
+  hBars(document.getElementById("chGrowth"), {
+    title: "Revenue growth, latest reported quarter",
+    sub: "Year over year, each company's own most recent quarter",
+    rows: [
+      { label: "AMD",  value: 50, display: "+50%", color: "var(--amd)",  note: "Q2 2026 · $11.5B" },
+      { label: "ORCL", value: 30, display: "+30%", color: "var(--orcl)", note: "Q1 FY27 · $19.35B" },
+      { label: "CELH", value: 11, display: "+11%", color: "var(--celh)", note: "Q2 2026 · $817.9m · missed consensus" },
+      { label: "ELF",  value: 36, display: "+36%", color: "var(--elf)",  note: "Q1 FY27 · $479.4m · includes rhode" }
+    ],
+    readme: "<b>How to read this:</b> four different quarters, because the fiscal calendars don't line up — " +
+            "the comparison is each company against its own year-ago quarter. " +
+            "ELF's 36% includes $160m from the acquired rhode brand, so it is not all organic. " +
+            "CELH's 11% is the only one that came in <em>below</em> what analysts expected."
+  });
+
+  hBars(document.getElementById("chMargin"), {
+    title: "Gross margin, latest reported quarter",
+    sub: "Percent of revenue left after direct product cost",
+    max: 100,
+    rows: [
+      { label: "AMD",  value: 54,   display: "54%",   color: "var(--amd)",  note: "GAAP, Q2 2026" },
+      { label: "ORCL", missing: true, missingLabel: "not comparable", color: "var(--orcl)",
+        note: "Oracle reports cost by category (cloud, hardware, services) with no single consolidated gross margin line" },
+      { label: "CELH", value: 48.1, display: "48.1%", color: "var(--celh)", note: "Down 340 bps from 51.5%" },
+      { label: "ELF",  value: 83,   display: "83%",   color: "var(--elf)",  note: "Includes ~1,050 bps of one-off tariff refunds; ~72.5% underlying" }
+    ],
+    readme: "<b>Watch the asterisks, not the ranking.</b> e.l.f.'s 83% is the highest bar on the chart and the " +
+            "least durable — roughly 10.5 points of it is a one-time tariff refund. Oracle's hatched track is " +
+            "not a missing number on my side: the company genuinely doesn't publish a comparable line."
+  });
+
+  /* cash engine small multiples */
+  var CASH = [
+    { tk: "AMD",  c: "var(--amd)",  per: "Q2 2026",  ocf: 2366,  capex: 808,   fcf: 1558,  unit: "m" },
+    { tk: "ORCL", c: "var(--orcl)", per: "Q1 FY27",  ocf: 23000, capex: 28500, fcf: -5000, unit: "m" },
+    { tk: "CELH", c: "var(--celh)", per: "Q1 2026",  ocf: 73.7,  capex: null,  fcf: null,  unit: "m",
+      foot: "Q2 cash flow not retrievable" },
+    { tk: "ELF",  c: "var(--elf)",  per: "Q1 FY27",  ocf: 111.7, capex: null,  fcf: null,  unit: "m",
+      foot: "capex not retrievable" }
+  ];
+  var cashHost = document.getElementById("cashMulti");
+  CASH.forEach(function (d) {
+    var max = Math.max(d.ocf, d.capex || 0) * 1.12;
+    var m = document.createElement("div");
+    m.className = "mini";
+    m.style.setProperty("--c", d.c);
+
+    function bar(v, name, seqColor, missing) {
+      if (missing) {
+        return '<div class="col"><div class="bar" style="height:6px;background:repeating-linear-gradient(135deg,var(--surface-2) 0 5px,var(--surface-3) 5px 10px);border-radius:3px">' +
+               '<span class="tag" style="color:var(--ink-3);font-style:italic;font-size:10.5px">n/a</span></div></div>';
+      }
+      return '<div class="col"><div class="bar" data-n="' + name + '" data-v="' + v + '" style="height:' +
+             (v / max * 100).toFixed(2) + '%;--c:' + seqColor + '">' +
+             '<span class="tag">' + (v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + v + "m") + '</span></div></div>';
+    }
+
+    m.innerHTML =
+      '<div class="mh"><span class="dot"></span>' + d.tk + '</div>' +
+      '<div class="mper">' + d.per + '</div>' +
+      '<div class="plot" style="height:118px;padding-top:20px">' +
+        '<div class="zero"></div>' +
+        bar(d.ocf, "Operating cash flow", "var(--seq-2)", false) +
+        bar(d.capex, "Capital expenditure", "var(--seq-4)", d.capex === null) +
+      '</div>' +
+      '<div class="xaxis" style="gap:10px"><div>Cash in</div><div>Capex</div></div>' +
+      '<div class="fcf">Free cash flow' +
+        '<b style="color:' + (d.fcf === null ? "var(--ink-3)" : (d.fcf < 0 ? "var(--crit-ink)" : "var(--good-ink)")) + '">' +
+          (d.fcf === null ? "—" : (d.fcf < 0 ? "−$" + (Math.abs(d.fcf) / 1000).toFixed(1) + "B" :
+            (d.fcf >= 1000 ? "$" + (d.fcf / 1000).toFixed(2) + "B" : "$" + d.fcf + "m"))) +
+        '</b>' + (d.foot ? '<span style="font-style:italic">' + d.foot + '</span>' : '') +
+      '</div>';
+
+    m.querySelectorAll(".bar[data-n]").forEach(function (b) {
+      bindTip(b, "<b>" + b.dataset.n + "</b>$" + Number(b.dataset.v).toLocaleString("en-US") + "m");
+    });
+    cashHost.appendChild(m);
+  });
+
+  /* compare table view (the required relief for low-contrast slots) */
+  document.getElementById("compareTable").innerHTML =
+    '<table><thead><tr><th>Holding</th><th>Quarter</th><th>Revenue ($m)</th><th>YoY</th>' +
+    '<th>Gross margin</th><th>Op. cash flow ($m)</th><th>Capex ($m)</th><th>Free cash flow ($m)</th></tr></thead><tbody>' +
+    '<tr><td>AMD</td><td>Q2 2026</td><td class="v">11,500</td><td class="v">+50%</td><td class="v">54%</td><td class="v">2,366</td><td class="v">808</td><td class="v">1,558</td></tr>' +
+    '<tr><td>Oracle</td><td>Q1 FY2027</td><td class="v">19,350</td><td class="v">+30%</td><td class="na">not comparable</td><td class="v">23,000</td><td class="v">28,500</td><td class="v">(5,000)</td></tr>' +
+    '<tr><td>Celsius Holdings</td><td>Q2 2026</td><td class="v">817.9</td><td class="v">+11%</td><td class="v">48.1%</td><td class="na">Q1 only: 73.7</td><td class="na">not retrieved</td><td class="na">not retrieved</td></tr>' +
+    '<tr><td>e.l.f. Beauty</td><td>Q1 FY2027</td><td class="v">479.4</td><td class="v">+36%</td><td class="v">~83%</td><td class="v">111.7</td><td class="na">not retrieved</td><td class="na">not retrieved</td></tr>' +
+    '</tbody></table>' +
+    '<div class="stmt-foot">Cash-flow periods differ by company — Celsius’s only retrievable statement covers Q1 2026, not the latest quarter.</div>';
+
+  /* ============================================================
+     PER-COMPANY CHART DEFINITIONS
+     ============================================================ */
+  var CHARTS = {
+    amdRev: function (host) {
+      columns(host, {
+        title: "Revenue, and what AMD guided next",
+        sub: "$ billions · the third column is guidance, not a result",
+        axisFmt: function (v) { return "$" + v.toFixed(0) + "B"; },
+        valFmt: function (v) { return "$" + v + "B"; },
+        bars: [
+          { label: "Q1 26", sub: "actual",   value: 10.3, display: "$10.3B", color: "var(--amd)" },
+          { label: "Q2 26", sub: "actual",   value: 11.5, display: "$11.5B", color: "var(--amd)" },
+          { label: "Q3 26", sub: "guided",   value: 13.0, display: "$13.0B", color: "var(--amd)", guide: true,
+            note: "Range $12.7–13.3B · about +41% YoY" }
+        ],
+        legend: [
+          { c: "var(--amd)", t: "Reported result" },
+          { c: "repeating-linear-gradient(135deg,var(--amd) 0 4px,color-mix(in srgb,var(--amd) 42%,var(--surface)) 4px 8px)", t: "Company guidance (midpoint)" }
+        ],
+        readme: "<b>The hatched bar is a promise, not a fact.</b> AMD guided Q3 to $12.7–13.3B; the bar is drawn " +
+                "at the $13.0B midpoint. Consensus going in was about $12.5B, so this guide was above the Street."
+      });
+    },
+
+    amdSeg: function (host) {
+      columns(host, {
+        title: "Where the $11.5B came from",
+        sub: "Q2 2026 revenue by segment, $ millions",
+        axisFmt: function (v) { return "$" + (v / 1000).toFixed(0) + "B"; },
+        valFmt: function (v) { return "$" + v.toLocaleString("en-US") + "m"; },
+        bars: [
+          { label: "Data Center", sub: "+107%", value: 6700, display: "$6,700m", color: "var(--seq-1)",
+            note: "58% of total company revenue" },
+          { label: "Client & Gaming", sub: "+6%", value: 3800, display: "$3,800m", color: "var(--seq-2)",
+            note: "Client $3,100m +23% · Gaming $779m −31%" },
+          { label: "Embedded", sub: "+19%", value: 977, display: "$977m", color: "var(--seq-3)",
+            note: "40% segment operating margin" }
+        ],
+        readme: "<b>Shades, not hues, because this is one company split by size.</b> Colour here encodes magnitude " +
+                "(darkest = largest), unlike the cross-company charts where colour encodes identity. " +
+                "Data Center alone is now bigger than the rest of AMD combined."
+      });
+    },
+
+    orclRpo: function (host) {
+      columns(host, {
+        title: "Backlog against the revenue it has to become",
+        sub: "$ billions · RPO is contracted-but-undelivered revenue",
+        axisFmt: function (v) { return "$" + v.toFixed(0) + "B"; },
+        valFmt: function (v) { return "$" + v + "B"; },
+        bars: [
+          { label: "RPO Q4 FY26", sub: "31 May 26", value: 638, display: "$638B", color: "var(--seq-2)" },
+          { label: "RPO Q1 FY27", sub: "31 Aug 26", value: 664, display: "$664B", color: "var(--seq-1)",
+            note: "+$26B sequentially · +$209B YoY" },
+          { label: "FY27 revenue", sub: "guided", value: 90, display: "$90B", color: "var(--seq-4)",
+            note: "Guidance is ≥$90B for the full fiscal year" }
+        ],
+        readme: "<b>This is the Oracle story in one picture.</b> The backlog is about <b>7.4×</b> the entire " +
+                "revenue Oracle expects to earn this fiscal year. Management says most of the newest slice " +
+                "won't convert to revenue until fiscal 2028 or later — so the tall bars are years of work " +
+                "already signed, not money in hand."
+      });
+    },
+
+    orclMix: function (host) {
+      columns(host, {
+        title: "Revenue mix, Q1 FY2027",
+        sub: "$ millions · cloud is now 60% of Oracle",
+        axisFmt: function (v) { return "$" + (v / 1000).toFixed(0) + "B"; },
+        valFmt: function (v) { return "$" + v.toLocaleString("en-US") + "m"; },
+        bars: [
+          { label: "Cloud", sub: "+62%", value: 11600, display: "$11.6B", color: "var(--seq-1)",
+            note: "IaaS $7,400m +121% · SaaS ~$4,200m +10%" },
+          { label: "Software", sub: "29% of rev", value: 5550, display: "$5,550m", color: "var(--seq-2)" },
+          { label: "Services", sub: "7% of rev", value: 1414, display: "$1,414m", color: "var(--seq-3)" },
+          { label: "Hardware", sub: "4% of rev", value: 774, display: "$774m", color: "var(--seq-4)" }
+        ],
+        readme: "<b>One company, ordered by size</b> — darkest is largest. The cloud bar hides the real split: " +
+                "inside it, infrastructure grew 121% while applications grew 10%. Oracle is two businesses " +
+                "moving at very different speeds."
+      });
+    },
+
+    elfMargin: function (host) {
+      columns(host, {
+        title: "The 83% gross margin, taken apart",
+        sub: "Percent of net sales",
+        max: 100,
+        axisFmt: function (v) { return v.toFixed(0) + "%"; },
+        valFmt: function (v) { return v + " pts"; },
+        bars: [
+          { label: "Q4 FY26", sub: "reported", value: 73, display: "73%", color: "var(--seq-2)" },
+          { label: "Q1 FY27", sub: "reported", display: "83%", color: "var(--seq-1)",
+            stack: [
+              { v: 72.5, name: "Underlying margin", color: "var(--seq-2)" },
+              { v: 10.5, name: "One-off tariff refunds", color: "var(--warning)" }
+            ] }
+        ],
+        legend: [
+          { c: "var(--seq-2)", t: "Underlying gross margin" },
+          { c: "var(--warning)", t: "One-off IEEPA tariff refund benefit (~1,050 bps)" }
+        ],
+        readme: "<b>Strip the yellow and the margin barely moved.</b> e.l.f. reported roughly 1,400 bps of " +
+                "margin expansion, but about 1,050 bps of it was tariff refunds. The underlying ~72.5% is " +
+                "slightly <em>below</em> the prior quarter's 73%. The split is my arithmetic from the " +
+                "company's own two disclosures."
+      });
+    },
+
+    elfGuide: function (host) {
+      columns(host, {
+        title: "Full-year net sales: done, and promised",
+        sub: "$ millions · fiscal years ending 31 March",
+        axisFmt: function (v) { return "$" + (v / 1000).toFixed(1) + "B"; },
+        valFmt: function (v) { return "$" + v.toLocaleString("en-US") + "m"; },
+        bars: [
+          { label: "FY2026", sub: "actual +25%", value: 1636.5, display: "$1,637m", color: "var(--elf)" },
+          { label: "FY2027", sub: "guided +18–20%", value: 1953, display: "$1,953m", color: "var(--elf)", guide: true,
+            note: "Range $1,938–1,968m · raised from +12–14%" }
+        ],
+        legend: [
+          { c: "var(--elf)", t: "Reported result" },
+          { c: "repeating-linear-gradient(135deg,var(--elf) 0 4px,color-mix(in srgb,var(--elf) 42%,var(--surface)) 4px 8px)", t: "Raised guidance (midpoint)" }
+        ],
+        readme: "<b>A six-point raise mid-year is unusual.</b> The guide went from +12–14% to +18–20% one " +
+                "quarter in. The bar is drawn at the $1,953m midpoint of the $1,938–1,968m range."
+      });
+    },
+
+    celhRev: function (host) {
+      columns(host, {
+        title: "Revenue, and the quarter that missed",
+        sub: "$ millions · the dashed bar is what analysts expected",
+        axisFmt: function (v) { return "$" + v.toFixed(0) + "m"; },
+        valFmt: function (v) { return "$" + v + "m"; },
+        bars: [
+          { label: "Q2 25", sub: "actual",  value: 739.3, display: "$739m", color: "var(--celh)" },
+          { label: "Q1 26", sub: "actual",  value: 783.0, display: "$783m", color: "var(--celh)" },
+          { label: "Q2 26", sub: "actual",  value: 817.9, display: "$818m", color: "var(--celh)",
+            note: "+11% YoY · North America $790.7m" },
+          { label: "Q2 26", sub: "expected", value: 887.7, display: "$888m", color: "var(--celh)", guide: true,
+            note: "Analyst consensus · actual came in ~8% below" }
+        ],
+        legend: [
+          { c: "var(--celh)", t: "Reported revenue" },
+          { c: "repeating-linear-gradient(135deg,var(--celh) 0 4px,color-mix(in srgb,var(--celh) 42%,var(--surface)) 4px 8px)", t: "Analyst consensus for Q2 2026" }
+        ],
+        readme: "<b>Revenue rose and still disappointed.</b> The last two bars are the same quarter: what " +
+                "Celsius delivered, and what the Street had modelled. The ~$70m gap is why the stock reaction " +
+                "mattered more than the growth rate."
+      });
+    },
+
+    celhMargin: function (host) {
+      columns(host, {
+        title: "Gross margin is grinding down",
+        sub: "Percent of revenue, three consecutive quarters",
+        max: 60,
+        axisFmt: function (v) { return v.toFixed(0) + "%"; },
+        valFmt: function (v) { return v + "%"; },
+        bars: [
+          { label: "Q2 25", sub: "",  value: 51.5, display: "51.5%", color: "var(--seq-4)" },
+          { label: "Q1 26", sub: "−400 bps", value: 48.3, display: "48.3%", color: "var(--seq-2)" },
+          { label: "Q2 26", sub: "−340 bps", value: 48.1, display: "48.1%", color: "var(--seq-1)",
+            note: "Promotional activity and channel mix" }
+        ],
+        readme: "<b>Two steps down, then flat.</b> The big compression happened between Q2 2025 and Q1 2026; " +
+                "Q2 2026 held roughly level. Management expects expansion from here as integration matures — " +
+                "that claim is testable against the Q3 print on 5 November."
+      });
+    }
+  };
+
+  /* ============================================================
+     STATEMENT TABLES
+     ============================================================ */
+  function cellVal(x, isPct) {
+    if (x === null || x === undefined) {
+      return '<td class="na" title="Not retrieved from the primary filing in this session">not retrieved</td>';
+    }
+    if (typeof x === "object" && x.derived) {
+      var inner = (typeof x.v === "string") ? x.v : fmtM(x.v);
+      return '<td class="v">' + inner +
+        '<span class="derived" title="Arithmetic computed from two confirmed figures, not an as-reported line">†</span></td>';
+    }
+    if (typeof x === "string") return '<td class="v">' + x + '</td>';
+    return '<td class="v">' + fmtM(x) + '</td>';
+  }
+
+  function stmtTable(spec, unitLabel) {
+    var html = '<table><thead><tr><th>' + unitLabel + '</th>';
+    spec.cols.forEach(function (c) { html += '<th>' + c + '</th>'; });
+    html += '</tr></thead><tbody>';
+
+    spec.rows.forEach(function (r) {
+      if (r.l === "spacer") {
+        html += '<tr class="spacer"><td colspan="' + (spec.cols.length + 1) + '"></td></tr>';
+        return;
+      }
+      var cls = [];
+      if (r.sum) cls.push("sum");
+      if (r.indent) cls.push("indent");
+      if (r.detail) cls.push("detail-row");
+      html += '<tr class="' + cls.join(" ") + '"><td>' + r.l + '</td>';
+      r.v.forEach(function (x) { html += cellVal(x, r.pct); });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    if (spec.note) html += '<div class="stmt-foot">' + spec.note + '</div>';
+    return html;
+  }
+
+  function plainTable(spec) {
+    var html = '<table><thead><tr><th>Segment</th>';
+    spec.cols.forEach(function (c) { html += '<th>' + c + '</th>'; });
+    html += '</tr></thead><tbody>';
+    spec.rows.forEach(function (r) {
+      var indent = /^—/.test(r[0]);
+      html += '<tr class="' + (indent ? "indent" : "") + '">';
+      r.forEach(function (c, i) {
+        if (i === 0) html += '<td>' + c + '</td>';
+        else html += '<td class="' + (c === "—" || c === "not retrieved" ? "na" : "v") + '">' + c + '</td>';
+      });
+      html += '</tr>';
+    });
+    return html + '</tbody></table>';
+  }
+
+  /* ============================================================
+     RENDER COMPANY SECTIONS
+     ============================================================ */
+  var host = document.getElementById("coHost");
+
+  HOLDINGS.forEach(function (h) {
+    var sec = document.createElement("article");
+    sec.className = "co";
+    sec.id = h.id;
+    sec.style.setProperty("--c", h.color);
+    sec.style.scrollMarginTop = "64px";
+
+    function bullets(list) {
+      return list.filter(function (b) { return b.t; }).map(function (b) {
+        return '<li class="' + (b.k || "") + '">' + b.t + '</li>';
+      }).join("");
+    }
+
+    var html = '<div class="co-in">';
+
+    /* head */
+    html +=
+      '<div class="co-head">' +
+        '<div class="co-id">' +
+          '<div class="co-tk">' + h.tk + '</div>' +
+          '<div class="co-name">' + h.name + '</div>' +
+          '<div class="co-what">' + h.what + '</div>' +
+        '</div>' +
+        '<div class="co-badges">' +
+          '<span class="pill ' + h.verdict.cls + '">' + h.verdict.txt + '</span>' +
+          '<span class="pill neutral">Next: ' + h.next.lab + ' · ' + prettyDate(h.next.date) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="fiscal">' + h.fiscal + '</div>';
+
+    /* two quarters */
+    html +=
+      '<div class="blockhead"><div class="eyebrow">The last two earnings</div>' +
+        '<span class="hint">Latest on the left. Square markers are colour-coded: ' +
+        'brand colour for context, green for a positive, red for a negative, amber for something to watch.</span></div>' +
+      '<div class="quarters">' +
+        '<div class="qcard latest">' +
+          '<div class="qh"><span class="qname">' + h.latest.lab + '</span>' +
+            '<span class="qmeta">' + h.latest.per + ' · ' + h.latest.rep + '</span></div>' +
+          '<ul>' + bullets(h.bullsLatest) + '</ul>' +
+        '</div>' +
+        '<div class="qcard">' +
+          '<div class="qh"><span class="qname">' + h.prior.lab + '</span>' +
+            '<span class="qmeta">' + h.prior.per + ' · ' + h.prior.rep + '</span></div>' +
+          '<ul>' + bullets(h.bullsPrior) + '</ul>' +
+        '</div>' +
+      '</div>';
+
+    /* guidance */
+    html +=
+      '<div class="blockhead"><div class="eyebrow">Guidance</div>' +
+        '<span class="hint">What the company itself committed to — kept separate from analyst expectations.</span></div>' +
+      '<div class="guide-panel">' +
+        '<h4>' + h.guide.head + '</h4>' +
+        '<div class="guide-grid">' +
+          h.guide.items.map(function (g) {
+            return '<div class="gitem"><div class="gk">' + g.k + '</div><div class="gv">' + g.v +
+                   '</div><div class="gn">' + g.n + '</div></div>';
+          }).join("") +
+        '</div>' +
+        '<div class="guide-note">' + h.guide.note + '</div>' +
+      '</div>';
+
+    /* quotes */
+    html +=
+      '<div class="blockhead"><div class="eyebrow">From the earnings call</div>' +
+        '<span class="hint">Direct quotes are in quotation marks. Items marked "Paraphrase" are management’s ' +
+        'position as reported in call coverage, not verbatim transcript.</span></div>' +
+      '<div class="quotes">' +
+        h.quotes.map(function (q) {
+          return '<blockquote class="quote' + (q.para ? " para" : "") + '"><q>' + q.q +
+                 '</q><span class="attr">' + q.a + '</span></blockquote>';
+        }).join("") +
+      '</div>';
+
+    /* charts */
+    html += '<div class="blockhead"><div class="eyebrow">Charts</div></div>' +
+            '<div class="co-charts">' +
+              h.charts.map(function (c) { return '<div class="chart" data-chart="' + c + '"></div>'; }).join("") +
+            '</div>';
+
+    /* statements */
+    html +=
+      '<div class="blockhead"><div class="eyebrow">The three statements</div>' +
+        '<span class="hint">All retrieved lines shown by default. Empty cells are lines I could not confirm; ' +
+        '<span class="derived">†</span> marks a figure I calculated.</span></div>' +
+      '<div class="stmt-wrap">' +
+        '<details class="stmt" open><summary><span class="sname">Income statement</span> ' +
+          '<span class="unit">$ millions unless noted</span></summary>' +
+          '<div class="tscroll">' + stmtTable(h.income, "Line item") + '</div></details>' +
+        (h.segments ? '<details class="stmt" open><summary><span class="sname">Segment detail</span> ' +
+          '<span class="unit">$ millions</span></summary><div class="tscroll">' +
+          plainTable(h.segments) + '</div></details>' : '') +
+        '<details class="stmt" open><summary><span class="sname">Balance sheet</span> ' +
+          '<span class="unit">$ millions</span></summary>' +
+          '<div class="tscroll">' + stmtTable(h.balance, "Line item") + '</div></details>' +
+        '<details class="stmt" open><summary><span class="sname">Cash flow statement</span> ' +
+          '<span class="unit">$ millions</span></summary>' +
+          '<div class="tscroll">' + stmtTable(h.cash, "Line item") + '</div></details>' +
+      '</div>';
+
+    html += '</div>';
+    sec.innerHTML = html;
+    host.appendChild(sec);
+
+    /* draw this company's charts */
+    sec.querySelectorAll("[data-chart]").forEach(function (node) {
+      var fn = CHARTS[node.dataset.chart];
+      if (fn) fn(node);
+    });
+  });
+
+  /* ============================================================
+     CONTROLS
+     ============================================================ */
+  var btnLines = document.getElementById("toggleLines");
+  btnLines.addEventListener("click", function () {
+    var on = document.body.classList.toggle("keylines");
+    btnLines.setAttribute("aria-pressed", String(on));
+    btnLines.textContent = on ? "Show every line" : "Condense to key lines";
+    try { localStorage.setItem("ed.keylines", on ? "1" : "0"); } catch (e) {}
+  });
+  try {
+    if (localStorage.getItem("ed.keylines") === "1") btnLines.click();
+  } catch (e) {}
+
+  function allStmts() { return document.querySelectorAll("details.stmt"); }
+  document.getElementById("expandAll").addEventListener("click", function () {
+    allStmts().forEach(function (d) { d.open = true; });
+  });
+  document.getElementById("collapseAll").addEventListener("click", function () {
+    allStmts().forEach(function (d) { d.open = false; });
+  });
+})();
+</script>
