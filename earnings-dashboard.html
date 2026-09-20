@@ -463,6 +463,25 @@ tbody tr.spacer td { height: 6px; padding: 0; border-bottom: none; background: t
 td.v { color: var(--ink); font-weight: 500; }
 td.na { color: var(--ink-3); font-style: italic; font-weight: 400; }
 .derived { color: var(--ink-3); font-size: 10px; vertical-align: super; font-style: normal; cursor: help; }
+
+/* ---- tabbed navigation: one holding on screen at a time ---- */
+button.tick { font-family: inherit; }
+.tick[aria-selected="true"] { background: var(--ink); color: var(--plane); border-color: var(--ink); }
+.tick[aria-selected="true"] .pct { color: var(--plane); opacity: .7; }
+.subtabs {
+  display: flex; gap: 2px; flex-wrap: wrap;
+  margin-top: 18px; border-bottom: 1px solid var(--rule);
+}
+.stab {
+  font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-2);
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 9px 13px; cursor: pointer; margin-bottom: -1px; white-space: nowrap;
+}
+.stab:hover { color: var(--ink); }
+.stab[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--c); }
+.copane > .blockhead:first-child { margin-top: 15px; }
+.stmt-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 13px; }
+.stmt-tools .btn { padding: 6px 11px; font-size: 12.5px; }
 .conflict { color: var(--serious); font-size: 10px; vertical-align: super; font-weight: 700; cursor: help; }
 .stmt-foot { padding: 10px 14px; font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-top: 1px solid var(--grid); }
 tr.detail-row { display: table-row; }
@@ -512,18 +531,20 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
 <div class="topbar">
   <div class="wrap topbar-in">
     <span class="brandmark">Earnings Desk</span>
-    <nav class="tickrail" aria-label="Jump to holding">
-      <a class="tick" href="#amd"  style="--c:var(--amd)"><span class="dot" style="background:var(--amd)"></span>AMD <span class="pct">+50%</span></a>
-      <a class="tick" href="#orcl" style="--c:var(--orcl)"><span class="dot" style="background:var(--orcl)"></span>ORCL <span class="pct">+30%</span></a>
-      <a class="tick" href="#celh" style="--c:var(--celh)"><span class="dot" style="background:var(--celh)"></span>CELH <span class="pct">+11%</span></a>
-      <a class="tick" href="#elf"  style="--c:var(--elf)"><span class="dot" style="background:var(--elf)"></span>ELF <span class="pct">+36%</span></a>
+    <nav class="tickrail" role="tablist" aria-label="Choose a view">
+      <button class="tick vtab" role="tab" data-view="overview" aria-selected="true">Overview</button>
+      <button class="tick vtab" role="tab" data-view="amd"  aria-selected="false"><span class="dot" style="background:var(--amd)"></span>AMD <span class="pct">+50%</span></button>
+      <button class="tick vtab" role="tab" data-view="orcl" aria-selected="false"><span class="dot" style="background:var(--orcl)"></span>ORCL <span class="pct">+30%</span></button>
+      <button class="tick vtab" role="tab" data-view="celh" aria-selected="false"><span class="dot" style="background:var(--celh)"></span>CELH <span class="pct">+11%</span></button>
+      <button class="tick vtab" role="tab" data-view="elf"  aria-selected="false"><span class="dot" style="background:var(--elf)"></span>ELF <span class="pct">+36%</span></button>
+      <button class="tick vtab" role="tab" data-view="notes" aria-selected="false">Data notes</button>
     </nav>
   </div>
 </div>
 
 <div class="wrap">
 
-  <header class="hero">
+  <header class="hero" id="hero">
     <div class="stamp"><span class="live-dot"></span> Data as of 20 Sep 2026 · all four holdings have reported</div>
     <h1>Four holdings,<br>eight quarters of receipts.</h1>
     <p class="lede">
@@ -532,11 +553,10 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
       call, and the three financial statements underneath it — so you can see whether the story
       and the cash agree. Colour is the wayfinding: each holding owns one hue everywhere it appears.
     </p>
-    <div class="hero-actions">
-      <button class="btn" id="toggleLines" aria-pressed="false">Condense to key lines</button>
-      <button class="btn" id="expandAll">Open all statements</button>
-      <button class="btn" id="collapseAll">Close all statements</button>
-    </div>
+    <p class="lede" style="font-size:14.5px;margin-top:18px">
+      <b>Use the tabs at the top.</b> This overview compares all four; each ticker opens that holding on
+      its own, split into two quarters, guidance and the call, charts, and the three statements.
+    </p>
   </header>
 
   <!-- ============ RADAR ============ -->
@@ -593,7 +613,7 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
 
   <!-- ============ COMPANIES ============ -->
   <section id="holdings">
-    <div class="sec-head">
+    <div class="sec-head" id="holdingsHead">
       <div class="eyebrow">Holding by holding</div>
       <h2>The four files</h2>
       <p>Ordered largest revenue first. Each file runs the same way: two quarters of bullets,
@@ -1864,6 +1884,16 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
      ============================================================ */
   var host = document.getElementById("coHost");
 
+  function subTabs(h) {
+    var panes = [["quarters", "Two quarters"], ["call", "Guidance &amp; call"],
+                 ["charts", "Charts"], ["stmts", "Statements"]];
+    return '<div class="subtabs" role="tablist" aria-label="Sections for ' + h.name + '">' +
+      panes.map(function (x, i) {
+        return '<button class="stab" role="tab" data-pane="' + x[0] +
+               '" aria-selected="' + (i === 0) + '">' + x[1] + '</button>';
+      }).join("") + '</div>';
+  }
+
   HOLDINGS.forEach(function (h) {
     var sec = document.createElement("article");
     sec.className = "co";
@@ -1892,7 +1922,9 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           '<span class="pill neutral">Next: ' + h.next.lab + ' · ' + prettyDate(h.next.date) + '</span>' +
         '</div>' +
       '</div>' +
-      '<div class="fiscal">' + h.fiscal + '</div>';
+      '<div class="fiscal">' + h.fiscal + '</div>' +
+      subTabs(h) +
+      '<div class="copane" data-pane="quarters">';
 
     /* two quarters */
     html +=
@@ -1913,6 +1945,7 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
       '</div>';
 
     /* guidance */
+    html += '</div><div class="copane" data-pane="call" hidden>';
     html +=
       '<div class="blockhead"><div class="eyebrow">Guidance</div>' +
         '<span class="hint">What the company itself committed to — kept separate from analyst expectations.</span></div>' +
@@ -1940,16 +1973,24 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
       '</div>';
 
     /* charts */
+    html += '</div><div class="copane" data-pane="charts" hidden>';
     html += '<div class="blockhead"><div class="eyebrow">Charts</div></div>' +
             '<div class="co-charts">' +
               h.charts.map(function (c) { return '<div class="chart" data-chart="' + c + '"></div>'; }).join("") +
             '</div>';
 
     /* statements */
+    html += '</div><div class="copane" data-pane="stmts" hidden>';
     html +=
       '<div class="blockhead"><div class="eyebrow">The three statements</div>' +
-        '<span class="hint">All retrieved lines shown by default. Empty cells are lines I could not confirm; ' +
-        '<span class="derived">†</span> marks a figure I calculated.</span></div>' +
+        '<span class="hint">Empty cells are lines I could not confirm; ' +
+        '<span class="derived">†</span> marks a figure I calculated, ' +
+        '<span class="conflict">‡</span> one where sources disagreed.</span></div>' +
+      '<div class="stmt-tools">' +
+        '<button class="btn" data-stmt-act="keylines" aria-pressed="false">Key lines only</button>' +
+        '<button class="btn" data-stmt-act="open">Open all</button>' +
+        '<button class="btn" data-stmt-act="close">Close all</button>' +
+      '</div>' +
       '<div class="stmt-wrap">' +
         '<details class="stmt" open><summary><span class="sname">Income statement</span> ' +
           '<span class="unit">$ millions unless noted</span></summary>' +
@@ -1965,7 +2006,7 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           '<div class="tscroll">' + stmtTable(h.cash, "Line item") + '</div></details>' +
       '</div>';
 
-    html += '</div>';
+    html += '</div></div>';
     sec.innerHTML = html;
     host.appendChild(sec);
 
@@ -1977,25 +2018,89 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
   });
 
   /* ============================================================
-     CONTROLS
+     NAVIGATION — the page shows one view at a time, so the reader
+     never scrolls past four companies to reach the one they want.
      ============================================================ */
-  var btnLines = document.getElementById("toggleLines");
-  btnLines.addEventListener("click", function () {
-    var on = document.body.classList.toggle("keylines");
-    btnLines.setAttribute("aria-pressed", String(on));
-    btnLines.textContent = on ? "Show every line" : "Condense to key lines";
-    try { localStorage.setItem("ed.keylines", on ? "1" : "0"); } catch (e) {}
-  });
-  try {
-    if (localStorage.getItem("ed.keylines") === "1") btnLines.click();
-  } catch (e) {}
+  var CO_IDS = ["amd", "orcl", "celh", "elf"];
 
-  function allStmts() { return document.querySelectorAll("details.stmt"); }
-  document.getElementById("expandAll").addEventListener("click", function () {
-    allStmts().forEach(function (d) { d.open = true; });
+  function showView(v, scroll) {
+    var isCo = CO_IDS.indexOf(v) >= 0;
+    document.getElementById("hero").hidden = v !== "overview";
+    ["radar", "pulse", "compare"].forEach(function (id) {
+      document.getElementById(id).hidden = v !== "overview";
+    });
+    document.getElementById("holdings").hidden = !isCo;
+    document.getElementById("holdingsHead").hidden = true;
+    document.querySelectorAll("#coHost > .co").forEach(function (a) { a.hidden = a.id !== v; });
+    ["glossary", "provenance"].forEach(function (id) {
+      document.getElementById(id).hidden = v !== "notes";
+    });
+    document.querySelectorAll(".vtab").forEach(function (b) {
+      b.setAttribute("aria-selected", String(b.dataset.view === v));
+    });
+    try { localStorage.setItem("ed.view", v); } catch (e) {}
+    if (scroll) window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll(".vtab").forEach(function (b) {
+    b.addEventListener("click", function () { showView(b.dataset.view, true); });
   });
-  document.getElementById("collapseAll").addEventListener("click", function () {
-    allStmts().forEach(function (d) { d.open = false; });
+
+  /* sub-tabs within a company, and the statement controls, both delegated
+     because the company markup is built after this script's first pass */
+  document.addEventListener("click", function (e) {
+    if (!e.target || !e.target.closest) return;
+
+    var tab = e.target.closest(".stab");
+    if (tab) {
+      var co = tab.closest(".co");
+      co.querySelectorAll(".stab").forEach(function (b) {
+        b.setAttribute("aria-selected", String(b === tab));
+      });
+      co.querySelectorAll(".copane").forEach(function (p) {
+        p.hidden = p.dataset.pane !== tab.dataset.pane;
+      });
+      return;
+    }
+
+    var act = e.target.closest("[data-stmt-act]");
+    if (!act) return;
+    if (act.dataset.stmtAct === "keylines") {
+      var on = document.body.classList.toggle("keylines");
+      setKeylineButtons(on);
+      try { localStorage.setItem("ed.keylines", on ? "1" : "0"); } catch (e2) {}
+    } else {
+      act.closest(".co").querySelectorAll("details.stmt").forEach(function (d) {
+        d.open = act.dataset.stmtAct === "open";
+      });
+    }
   });
+
+  function setKeylineButtons(on) {
+    document.querySelectorAll('[data-stmt-act="keylines"]').forEach(function (x) {
+      x.setAttribute("aria-pressed", String(on));
+      x.textContent = on ? "Show every line" : "Key lines only";
+    });
+  }
+
+  /* Boot: a #hash deep link wins, then the last view this reader chose. */
+  var start = "overview";
+  var hash = (location.hash || "").replace("#", "");
+  if (hash && (CO_IDS.indexOf(hash) >= 0 || hash === "notes" || hash === "overview")) {
+    start = hash;
+  } else {
+    try {
+      var saved = localStorage.getItem("ed.view");
+      if (saved) start = saved;
+    } catch (e) {}
+  }
+  showView(start, false);
+
+  try {
+    if (localStorage.getItem("ed.keylines") === "1") {
+      document.body.classList.add("keylines");
+      setKeylineButtons(true);
+    }
+  } catch (e) {}
 })();
 </script>
