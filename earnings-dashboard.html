@@ -699,13 +699,20 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           the equity raise, the dividend and the full Q2 and FY27 guidance are <b>as published by the company</b>.</li>
         <li>Everything else came through <b>web search result summaries</b>. Direct access to
           <b>sec.gov</b>, the four investor-relations sites, <b>businesswire</b>, <b>nasdaq.com</b>,
-          <b>q4cdn</b> and every financial-data aggregator is <b>blocked by this environment's network
-          egress policy</b>, so the 10-Q and 8-K exhibits could not be opened and read line by line.</li>
+          <b>q4cdn</b>, the CDN copies of the filings and every financial-data aggregator is
+          <b>blocked by this environment's network egress policy</b>, so the 10-Q and 8-K exhibits could
+          not be opened and read line by line. That policy is set on the environment, not from inside
+          this session, so it could not be widened here.</li>
+        <li><b>Two income statements now reconcile end to end.</b> AMD's foots from operating income
+          through other income, interest and tax to the reported net income; e.l.f.'s foots backwards from
+          its tax provision and effective rate. Where a statement still does not foot, the discrepancy is
+          named in that table's own footnote rather than smoothed over.</li>
         <li>Cells marked <span class="na">not retrieved</span> are lines that could not be confirmed. They
           are left empty deliberately — nothing on this page is estimated, interpolated or filled in to
-          look complete. What is still missing is mostly below-the-line detail: tax and interest lines for
-          three of the four, Oracle's asset-side balance sheet, Celsius's capital expenditure, and most
-          prior-period comparatives.</li>
+          look complete. What remains outstanding: AMD's Q1 expense detail and prior-period balance sheet,
+          Oracle's Q4 expense breakdown and investing/financing lines, Celsius's capital expenditure and
+          current-liability detail, and e.l.f.'s Q4 expense lines — including what caused that quarter's
+          $49.4m GAAP loss, which the available coverage never explains.</li>
         <li>Cells marked <span class="derived">†</span> are <b>arithmetic performed here</b> from two
           confirmed figures — Celsius's operating income as gross profit less SG&amp;A, its Q2 cash flow as
           the half-year less Q1, e.l.f.'s gross profit from its disclosed margin. They are labelled so you
@@ -791,7 +798,7 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
         { t: "Embedded returned to real growth: <b>$977m, up 19%</b> YoY and 12% sequentially, at a 40% segment operating margin — up from 33% a year ago.", k: "pos" },
         { t: "Operating cash flow <b>$2,366m</b>, capex <b>$808m</b>, free cash flow <b>$1,558m</b> (14% of revenue). Balance sheet carries <b>$13.1B</b> of cash and short-term investments against <b>$2.4B</b> of long-term debt.", k: "pos" },
         { t: "<b>AMD retired its entire treasury stock position</b> during the first half — $0 at 27 June against 65m shares carried at $7,079m on 27 December 2025. Buybacks themselves were modest: $221m under the programme in six months.", k: "flag" },
-        { t: "Note the shape: <b>net income ($2.3B) exceeded operating income ($2.0B)</b>. Items below the operating line added rather than subtracted. Interest expense was only $37m, so the lift is coming from investment income, equity earnings or tax — AMD ran a 14.8% effective tax rate in Q1.", k: "flag" }
+        { t: "<b>Net income ($2.3B) exceeded operating income ($2.0B), and here is why.</b> Other income was <b>$598m</b> — up 510% — driven by <b>unrealised gains on non-marketable equity securities that went public</b> during the quarter. A <b>9.8% effective tax rate</b> (helped by FDDEI and R&D credits) did the rest. Roughly $346m of the quarter's net income is a non-cash mark-to-market gain that will not repeat.", k: "flag" }
       ],
       bullsPrior: [
         { t: "Revenue <b>$10.3B, up 38%</b> — at the time itself a record, driven by Data Center and Client.", k: "pos" },
@@ -825,23 +832,25 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
 
       income: {
         cols: ["Q2 2026", "Q1 2026"],
-        note: "AMD reports headline figures rounded to the nearest $0.1B, so this column does not foot exactly. Note in particular that the disclosed expense components (R&D $2.5B + MG&A $1.4B + amortisation $544m = $4.44B) do not reconcile to the reported $4.2B total operating expenses — the components are rounded and at least one is stated at a different level of aggregation. Both are shown as reported rather than forced to agree.",
+        note: "The bottom half of this statement now reconciles: $2,000m operating income plus $598m of other income less $37m interest gives $2,561m pre-tax, and a $252m provision (9.8%) leaves the $2.3B reported net income. The top half does not — the disclosed expense components (R&D $2.5B + MG&A $1.4B + amortisation $544m = $4.44B) exceed the reported $4.2B of total operating expenses, because the components are rounded and at least one is stated at a different level of aggregation. Both are shown as reported rather than forced to agree.",
         rows: [
           { l: "Revenue", v: [11500, 10300], sum: true },
           { l: "Cost of revenue", v: [D(5300), NA] },
           { l: "Gross profit", v: [6200, NA], sum: true },
           { l: "Gross margin", v: ["54%", "53%"], pct: true },
           { l: "spacer" },
-          { l: "Research and development", v: [2500, NA], detail: true },
-          { l: "Marketing, general and administrative", v: [1400, NA], detail: true },
+          { l: "Research and development", v: [2500, 2400], detail: true },
+          { l: "Marketing, general and administrative", v: [1400, 1300], detail: true },
           { l: "Amortisation of acquisition-related intangibles", v: [544, NA], detail: true },
           { l: "Total operating expenses (as reported)", v: [4200, NA], sum: true },
           { l: "Operating income", v: [2000, 1500], sum: true },
           { l: "Operating margin", v: ["17%", D("15%")], pct: true },
           { l: "spacer" },
           { l: "Interest expense", v: [-37, NA], detail: true },
-          { l: "Income tax provision", v: [NA, 238], detail: true },
-          { l: "Effective tax rate", v: [NA, "14.8%"], pct: true, detail: true },
+          { l: "Other income (expense), net", v: [598, NA] },
+          { l: "Income before income taxes", v: [D(2561), D(1638)], sum: true },
+          { l: "Income tax provision", v: [-252, -238], detail: true },
+          { l: "Effective tax rate", v: ["9.8%", "14.8%"], pct: true, detail: true },
           { l: "Net income", v: [2300, 1400], sum: true },
           { l: "Diluted earnings per share", v: ["$1.38", "$0.84"], pct: true, sum: true },
           { l: "spacer" },
@@ -863,14 +872,14 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
       },
       balance: {
         cols: ["27 Jun 2026", "27 Dec 2025"],
-        note: "Two independent sources gave different totals for assets and for cash plus short-term investments; both figures are shown with the alternative noted on the ‡ marker rather than one being silently chosen. Total liabilities is the sum of the disclosed components; equity is total assets less that sum, so it inherits the same uncertainty.",
+        note: "Total assets of $84,464m is now corroborated by two independent sources; an earlier third reading of $79,642m appears to be stale and has been discarded. The cash-plus-investments line is still disputed and carries a ‡. Total liabilities is the sum of the disclosed components; equity is total assets less that sum.",
         rows: [
           { l: "Cash and cash equivalents", v: [5585, NA] },
           { l: "Cash, cash equivalents and short-term investments", v: [C(13100, "An alternative source gave $12.3B for this date"), 10600], sum: true },
           { l: "Accounts receivable, net", v: [7281, NA], detail: true },
           { l: "Inventories", v: [8468, NA], detail: true },
           { l: "Goodwill", v: [25470, NA], detail: true },
-          { l: "Total assets", v: [C(84464, "An alternative source gave $79,642m for this date"), 76926], sum: true },
+          { l: "Total assets", v: [84464, 76926], sum: true },
           { l: "spacer" },
           { l: "Accounts payable", v: [5359, NA], detail: true },
           { l: "Accrued liabilities", v: [5546, NA], detail: true },
@@ -967,9 +976,9 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           { l: "Cloud services and license support — cloud", v: [11600, 9900], sum: true },
           { l: "— Cloud infrastructure (IaaS)", v: [7400, 5800], indent: true },
           { l: "— Cloud applications (SaaS)", v: [4200, 4100], indent: true },
-          { l: "Software (license support and license)", v: [5550, NA], detail: true },
-          { l: "Services", v: [1414, NA], detail: true },
-          { l: "Hardware", v: [774, NA], detail: true },
+          { l: "Software (license support and license)", v: [5550, 6800], detail: true },
+          { l: "Services", v: [1414, 1500], detail: true },
+          { l: "Hardware", v: [774, D(1000)], detail: true },
           { l: "Total revenues", v: [19350, 19200], sum: true },
           { l: "spacer" },
           { l: "Cloud and software expenses", v: [6400, NA], detail: true },
@@ -988,7 +997,11 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           { l: "Non-GAAP diluted earnings per share", v: ["$1.92", "$2.11"], pct: true, sum: true },
           { l: "Non-GAAP net income available to common", v: [5800, NA], detail: true },
           { l: "spacer" },
-          { l: "Remaining performance obligations (RPO)", v: [664000, 638000], sum: true }
+          { l: "Remaining performance obligations (RPO)", v: [664000, 638000], sum: true },
+          { l: "spacer" },
+          { l: "Memo: full-year FY2026 revenue", v: [67400, NA], detail: true },
+          { l: "Memo: full-year FY2026 GAAP operating income", v: [20600, NA], detail: true },
+          { l: "Memo: full-year FY2026 non-GAAP operating income", v: [28900, NA], detail: true }
         ]
       },
       balance: {
@@ -996,27 +1009,35 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
         note: "Equity rose chiefly through the at-the-market equity programme, which raised $19,909m in the quarter, plus $4,760m of net income. Total debt is the sum of the current and non-current borrowing lines. Note the shape of this balance sheet: borrowings are nearly double equity.",
         rows: [
           { l: "Cash and cash equivalents", v: [36369] },
-          { l: "Marketable securities", v: [NA], detail: true },
-          { l: "Trade receivables, net", v: [NA], detail: true },
-          { l: "Property, plant and equipment, net", v: [NA], detail: true },
-          { l: "Goodwill and intangible assets", v: [NA], detail: true },
+          { l: "Marketable securities", v: [708], detail: true },
+          { l: "Trade receivables, net of $536 allowance", v: [11394], detail: true },
+          { l: "Prepaid expenses and other current assets", v: [7159], detail: true },
+          { l: "Total current assets", v: [55630], sum: true },
+          { l: "Property, plant and equipment, net", v: [127845] },
+          { l: "Goodwill", v: [62267], detail: true },
           { l: "Total assets", v: [303259], sum: true },
           { l: "spacer" },
           { l: "Notes payable and other borrowings, current", v: [7625] },
+          { l: "Total current liabilities", v: [47500], sum: true },
           { l: "Notes payable and other borrowings, non-current", v: [117712] },
           { l: "Total debt", v: [D(125337)], sum: true },
-          { l: "Total liabilities", v: [NA], sum: true },
+          { l: "Deferred revenues, current", v: [D(14686)], detail: true },
+          { l: "Deferred revenues, non-current", v: [16103], detail: true },
+          { l: "Total deferred revenues", v: [30789], detail: true },
+          { l: "Total liabilities", v: [D(236063)], sum: true },
           { l: "Total stockholders' equity", v: [67196], sum: true },
           { l: "— of which common stock issued under the ATM programme", v: [19909], indent: true, detail: true }
         ]
       },
       cash: {
         cols: ["Q1 FY2027"],
-        note: "Net cash capex after customer prepayments was about $18B — i.e. roughly $10.5B of the quarter's capacity spending was funded by customers rather than by Oracle. The equity raise is shown here because it is how the remaining gap was financed.",
+        note: "Net cash capex after customer prepayments was about $18B — roughly $10.5B of the quarter's capacity spending was funded by customers rather than by Oracle. The equity raise is shown because it is how the remaining gap was financed. Oracle has said it expects to raise about $40B across fiscal 2027 through debt and equity combined, including this $20B programme, and does not expect to issue further debt in calendar 2026. Operating cash flow and capex are the company's own figures; the resulting −$5.4B free cash flow is arithmetic, and Oracle stated it as \"negative $5 billion\".",
         rows: [
-          { l: "Net cash provided by operating activities", v: [23000], sum: true },
+          { l: "Net cash provided by operating activities", v: [23100], sum: true },
+          { l: "— prior quarter (Q4 FY26)", v: [14620], indent: true, detail: true },
+          { l: "— same quarter a year earlier", v: [8140], indent: true, detail: true },
           { l: "Capital expenditures", v: [-28500] },
-          { l: "Free cash flow", v: [-5000], sum: true },
+          { l: "Free cash flow", v: [D(-5400)], sum: true },
           { l: "Net cash capex after customer prepayments", v: [-18000], detail: true },
           { l: "spacer" },
           { l: "Proceeds from common stock issued (ATM programme)", v: [19909] },
@@ -1081,7 +1102,7 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
 
       income: {
         cols: ["Q1 FY2027", "Q4 FY2026"],
-        note: "e.l.f. reports a single consolidated SG&A line. Gross margin is disclosed as \"approximately\" 83% and 73%, so gross profit, cost of sales and operating income derived from it carry that imprecision — they are marked † accordingly. The $50m of tariff refunds was recorded in cost of goods sold, which is why it lifts the gross margin line rather than appearing as other income.",
+        note: "This statement now reconciles from the bottom: a $27.7m tax provision at a 29.4% effective rate implies $94.3m of pre-tax income, which plus $7.8m of net interest expense gives $102.1m of operating income. Gross profit implied from the \"approximately 83%\" margin less the $280.3m SG&A line comes to $117.6m, so roughly $15.5m of operating costs sit outside the SG&A caption — shown here as an implied line rather than left as an unexplained gap. The $50m of tariff refunds was recorded in cost of goods sold, which is why it lifts gross margin rather than appearing as other income. Note also that the full-year FY2026 gross margin was 70.7%, below the 73% reported for Q4 alone.",
         rows: [
           { l: "Net sales", v: [479.4, 449.3], sum: true },
           { l: "Cost of sales", v: [D(81.5), NA], detail: true },
@@ -1090,9 +1111,13 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           { l: "Gross margin excluding tariff refunds", v: [D("~72.5%"), "~73%"], pct: true, detail: true },
           { l: "spacer" },
           { l: "Selling, general and administrative", v: [280.3, NA] },
-          { l: "Operating income", v: [D(117.6), NA], sum: true },
-          { l: "Interest expense, net", v: [NA, NA], detail: true },
-          { l: "Income tax provision", v: [NA, NA], detail: true },
+          { l: "Other operating items (implied)", v: [D(15.5), NA], detail: true },
+          { l: "Operating income", v: [D(102.1), NA], sum: true },
+          { l: "Interest expense, net", v: [-7.8, NA] },
+          { l: "— of which interest income on IEEPA refunds", v: [2.1], indent: true, detail: true },
+          { l: "Income before income taxes", v: [D(94.3), NA], sum: true },
+          { l: "Income tax provision", v: [-27.7, NA] },
+          { l: "Effective tax rate", v: ["29.4%", NA], pct: true, detail: true },
           { l: "Net income / (loss) (GAAP)", v: [66.6, -49.4], sum: true },
           { l: "GAAP diluted earnings / (loss) per share", v: ["$1.12", "$(0.82)"], pct: true, sum: true },
           { l: "spacer" },
@@ -1105,6 +1130,9 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           { l: "Memo: rhode brand net sales", v: [160.0, NA], detail: true },
           { l: "Memo: IEEPA tariff refunds received", v: [50.0, NA], detail: true },
           { l: "Memo: full-year FY2026 net sales", v: [1636.5, NA], detail: true },
+          { l: "Memo: full-year FY2026 gross profit", v: [1157.3, NA], detail: true },
+          { l: "Memo: full-year FY2026 gross margin", v: ["70.7%", NA], pct: true, detail: true },
+          { l: "Memo: full-year FY2026 SG&A", v: [1026.1, NA], detail: true },
           { l: "Memo: full-year FY2026 adjusted EBITDA", v: [335.2, NA], detail: true },
           { l: "Memo: full-year FY2026 adjusted diluted EPS", v: ["$3.13", NA], pct: true, detail: true }
         ]
@@ -1251,6 +1279,7 @@ footer p { font-size: 12.5px; color: var(--ink-3); max-width: 76ch; }
           { l: "— implied second quarter", v: [D(222.6), D(43.7)], indent: true },
           { l: "spacer" },
           { l: "Net cash used in investing activities (Q1 only)", v: [-7.7, -6.9], detail: true },
+          { l: "Share repurchases (Q1 only)", v: [-24.1, NA], detail: true },
           { l: "Capital expenditures", v: [NA, NA] },
           { l: "Free cash flow", v: [NA, NA], sum: true },
           { l: "Net cash from financing activities", v: [NA, NA], detail: true }
