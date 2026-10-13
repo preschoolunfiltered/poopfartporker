@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classroom Noise Tracker</title>
+<style>
+  :root {
+    --bg: #fdf8ef;
+    --card: #ffffff;
+    --ink: #2b2b3a;
+    --muted: #6b6b80;
+    --line: #e8e2d6;
+    --quiet: #3fb87a;
+    --medium: #f2b632;
+    --loud: #e8574a;
+    --star: #f5b400;
+    --accent: #5b6cff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1c24;
+      --card: #262833;
+      --ink: #f1f1f5;
+      --muted: #a4a6b8;
+      --line: #373a48;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+    transition: background-color .4s;
+  }
+  body.state-loud { background: color-mix(in srgb, var(--loud) 18%, var(--bg)); }
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 100%;
+  }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: clamp(1.4rem, 4vw, 2rem); }
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 18px;
+    cursor: pointer;
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: 0 0 0 2px var(--line) inset;
+  }
+  button.primary { background: var(--accent); color: #fff; box-shadow: none; font-size: 1.2rem; padding: 14px 28px; }
+  .card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 2px 0 var(--line);
+  }
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+  .face { width: min(60vw, 280px); height: auto; }
+  .face circle.head { transition: fill .3s; }
+  .message { font-size: clamp(1.6rem, 6vw, 3rem); font-weight: bold; margin: 0; min-height: 1.2em; }
+  .meter {
+    position: relative;
+    width: 100%;
+    height: 48px;
+    border-radius: 24px;
+    background: linear-gradient(90deg, var(--quiet) 0%, var(--quiet) 45%, var(--medium) 60%, var(--loud) 85%);
+    overflow: hidden;
+  }
+  .meter .cover {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    background: var(--line);
+    transition: width .1s linear;
+  }
+  .meter .limit {
+    position: absolute; top: -4px; bottom: -4px; width: 4px;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; }
+  .stat { text-align: center; }
+  .stat .num { font-size: clamp(1.6rem, 6vw, 2.6rem); font-weight: bold; }
+  .stat .label { color: var(--muted); font-size: .95rem; }
+  .stars { font-size: clamp(1.6rem, 6vw, 2.4rem); letter-spacing: 4px; min-height: 1.3em; word-break: break-all; color: var(--star); }
+  .progress { width: 100%; height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; }
+  .progress > div { height: 100%; width: 0; background: var(--star); transition: width .25s linear; }
+  details summary { cursor: pointer; font-weight: bold; font-size: 1.1rem; }
+  .settings { display: grid; gap: 16px; margin-top: 16px; }
+  .settings label { display: grid; gap: 6px; }
+  .settings .row { display: flex; justify-content: space-between; gap: 8px; }
+  .settings input[type=range] { width: 100%; accent-color: var(--accent); }
+  .settings .hint { color: var(--muted); font-size: .9rem; }
+  .check { display: flex !important; align-items: center; gap: 10px; grid-template-columns: none; }
+  .check input { width: 22px; height: 22px; accent-color: var(--accent); }
+  .error { color: var(--loud); }
+  .hidden { display: none !important; }
+  @keyframes wobble { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-6deg) } 75% { transform: rotate(6deg) } }
+  .wobble { animation: wobble .35s ease-in-out 2; }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.25) } 100% { transform: scale(1); opacity: 1 } }
+  .stars span:last-child.new { display: inline-block; animation: pop .5s ease-out; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🤫 Noise Tracker</h1>
+    <div>
+      <button id="resetBtn" title="Clear stars and counts">Reset</button>
+      <button id="fsBtn" title="Full screen">⛶ Full screen</button>
+    </div>
+  </header>
+
+  <section class="card stage">
+    <svg class="face" id="face" viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="head" id="head" cx="100" cy="100" r="92" fill="#3fb87a"/>
+      <circle cx="70" cy="80" r="11" fill="#2b2b3a"/>
+      <circle cx="130" cy="80" r="11" fill="#2b2b3a"/>
+      <path id="mouth" d="M60 125 Q100 160 140 125" stroke="#2b2b3a" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <g id="hands" class="hidden">
+        <circle cx="25" cy="70" r="20" fill="#ffd9a8"/>
+        <circle cx="175" cy="70" r="20" fill="#ffd9a8"/>
+      </g>
+    </svg>
+    <p class="message" id="message">Press Start to listen!</p>
+    <div class="meter" role="meter" aria-label="Noise level" aria-valuemin="0" aria-valuemax="100" id="meter">
+      <div class="cover" id="cover" style="width:100%"></div>
+      <div class="limit" id="limit"></div>
+    </div>
+    <button class="primary" id="startBtn">▶ Start listening</button>
+    <p class="error hidden" id="error"></p>
+  </section>
+
+  <section class="card stage">
+    <div class="stars" id="stars" aria-label="Quiet stars earned"></div>
+    <div class="progress" title="Progress to the next star"><div id="starProgress"></div></div>
+    <div class="stats">
+      <div class="stat"><div class="num" id="starCount">0</div><div class="label">⭐ Quiet stars</div></div>
+      <div class="stat"><div class="num" id="quietPct">–</div><div class="label">Time quiet</div></div>
+      <div class="stat"><div class="num" id="loudCount">0</div><div class="label">Too-loud moments</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>⚙️ Teacher settings</summary>
+      <div class="settings">
+        <label>
+          <span class="row"><span>Too-loud limit</span><strong id="limitVal"></strong></span>
+          <input type="range" id="limitIn" min="10" max="95" step="1">
+          <span class="hint">Lower = stricter. Move it up during play time, down for nap or story time.</span>
+        </label>
+        <label>
+          <span class="row"><span>Microphone sensitivity</span><strong id="sensVal"></strong></span>
+          <input type="range" id="sensIn" min="1" max="10" step="1">
+          <span class="hint">Turn up if the meter barely moves; turn down if it's always full.</span>
+        </label>
+        <label>
+          <span class="row"><span>Earn a star every</span><strong id="starVal"></strong></span>
+          <input type="range" id="starIn" min="15" max="300" step="15">
+        </label>
+        <label class="check"><input type="checkbox" id="chimeIn"> Play a gentle chime when it gets too loud</label>
+        <label class="check"><input type="checkbox" id="resetStarIn"> Too-loud moments restart progress toward the next star</label>
+      </div>
+    </details>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const COLORS = { quiet: '#3fb87a', medium: '#f2b632', loud: '#e8574a' };
+  const MESSAGES = {
+    quiet: ['Nice and quiet! 🌟', 'Great inside voices!', 'So peaceful! 🐢'],
+    medium: ['Getting a little loud…', 'Inside voices, please 🐭', 'Shhh… almost too loud'],
+    loud: ['Too loud! 🙉', 'Whoa, quiet down! 🦁', 'Let\'s use whisper voices!'],
+  };
+
+  // --- settings (remembered on this device) ---
+  const defaults = { limit: 60, sens: 5, starSecs: 60, chime: false, resetStar: true };
+  let settings = { ...defaults };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem('noiseTrackerSettings') || '{}')); } catch {}
+  const save = () => { try { localStorage.setItem('noiseTrackerSettings', JSON.stringify(settings)); } catch {} };
+
+  const fmtSecs = s => s < 60 ? `${s} sec` : (s % 60 ? `${Math.floor(s / 60)} min ${s % 60} sec` : `${s / 60} min`);
+  function renderSettings() {
+    $('limitIn').value = settings.limit; $('limitVal').textContent = settings.limit;
+    $('sensIn').value = settings.sens; $('sensVal').textContent = settings.sens;
+    $('starIn').value = settings.starSecs; $('starVal').textContent = fmtSecs(settings.starSecs);
+    $('chimeIn').checked = settings.chime;
+    $('resetStarIn').checked = settings.resetStar;
+    $('limit').style.left = `calc(${settings.limit}% - 2px)`;
+  }
+  const bind = (id, key, parse) => $(id).addEventListener('input', e => {
+    settings[key] = parse(e.target);
+    save(); renderSettings();
+  });
+  bind('limitIn', 'limit', el => +el.value);
+  bind('sensIn', 'sens', el => +el.value);
+  bind('starIn', 'starSecs', el => +el.value);
+  bind('chimeIn', 'chime', el => el.checked);
+  bind('resetStarIn', 'resetStar', el => el.checked);
+  renderSettings();
+
+  // --- session state ---
+  let stars = 0, loudCount = 0, quietMs = 0, totalMs = 0, starMs = 0;
+  let state = 'idle', lastLoudAt = 0, msgTimer = 0;
+
+  function renderStats() {
+    $('starCount').textContent = stars;
+    $('loudCount').textContent = loudCount;
+    $('quietPct').textContent = totalMs > 3000 ? Math.round(100 * quietMs / totalMs) + '%' : '–';
+    $('starProgress').style.width = Math.min(100, 100 * starMs / (settings.starSecs * 1000)) + '%';
+  }
+  function renderStars(animate) {
+    const el = $('stars');
+    el.innerHTML = '';
+    if (!stars) { el.innerHTML = '<span style="color:var(--muted);font-size:1.1rem;letter-spacing:0">Stay quiet to earn stars!</span>'; return; }
+    const shown = Math.min(stars, 30);
+    for (let i = 0; i < shown; i++) {
+      const s = document.createElement('span');
+      s.textContent = '⭐';
+      if (animate && i === shown - 1) s.className = 'new';
+      el.appendChild(s);
+    }
+    if (stars > 30) el.append(` +${stars - 30}`);
+  }
+  $('resetBtn').addEventListener('click', () => {
+    if (!confirm('Clear all stars and counts?')) return;
+    stars = loudCount = quietMs = totalMs = starMs = 0;
+    renderStars(false); renderStats();
+  });
+
+  // --- face & message ---
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  function setState(next) {
+    if (next === state) return;
+    state = next;
+    $('head').setAttribute('fill', COLORS[next]);
+    $('mouth').setAttribute('d', {
+      quiet: 'M60 125 Q100 160 140 125',
+      medium: 'M65 135 L135 135',
+      loud: 'M75 130 Q100 105 125 130 Q100 165 75 130 Z',
+    }[next]);
+    $('mouth').setAttribute('fill', next === 'loud' ? '#2b2b3a' : 'none');
+    $('hands').classList.toggle('hidden', next !== 'loud');
+    document.body.classList.toggle('state-loud', next === 'loud');
+    // Don't flicker messages — change them at most every 1.5s
+    const now = performance.now();
+    if (now - msgTimer > 1500 || next === 'loud') {
+      $('message').textContent = pick(MESSAGES[next]);
+      msgTimer = now;
+    }
+    if (next === 'loud') {
+      const face = $('face');
+      face.classList.remove('wobble'); void face.getBoundingClientRect(); face.classList.add('wobble');
+    }
+  }
+
+  // --- sounds ---
+  let audioCtx;
+  function tone(freqs, dur = 0.25, gap = 0.18, vol = 0.15) {
+    if (!audioCtx) return;
+    freqs.forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      const t = audioCtx.currentTime + i * gap;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+
+  // --- microphone ---
+  let analyser, buf, running = false, level = 0, lastFrame = 0, loudSince = 0;
+
+  async function start() {
+    $('error').classList.add('hidden');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      await audioCtx.resume();
+      const src = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+      buf = new Float32Array(analyser.fftSize);
+      src.connect(analyser);
+      running = true;
+      $('startBtn').classList.add('hidden');
+      state = 'idle'; setState('quiet');
+      lastFrame = performance.now();
+      requestAnimationFrame(tick);
+      keepAwake();
+    } catch (err) {
+      const e = $('error');
+      e.textContent = err && err.name === 'NotAllowedError'
+        ? 'Microphone access was blocked. Allow the microphone in your browser settings and try again.'
+        : 'Couldn\'t start the microphone. Open this page over https (or from your computer) in Chrome, Safari, Edge or Firefox.';
+      e.classList.remove('hidden');
+    }
+  }
+  $('startBtn').addEventListener('click', start);
+
+  function tick(now) {
+    if (!running) return;
+    const dt = Math.min(now - lastFrame, 250);
+    lastFrame = now;
+
+    analyser.getFloatTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    const rms = Math.sqrt(sum / buf.length);
+    // Map to 0–100 on a decibel scale; sensitivity shifts the floor.
+    const db = 20 * Math.log10(rms + 1e-8);           // ~ -100 (silence) .. 0 (max)
+    const floor = -75 + (settings.sens - 5) * -4;     // sens 1 → -59, sens 10 → -95
+    const raw = Math.max(0, Math.min(100, (db - floor) / (-floor - 10) * 100));
+    // Rise fast, fall slowly so the needle is readable.
+    level += (raw - level) * (raw > level ? 0.35 : 0.06);
+
+    $('cover').style.width = (100 - level) + '%';
+    $('meter').setAttribute('aria-valuenow', Math.round(level));
+
+    const limit = settings.limit;
+    let next = level >= limit ? 'loud' : level >= limit * 0.75 ? 'medium' : 'quiet';
+    // Require ~0.4s of sustained noise before calling it "too loud" (ignores a single clap or dropped block).
+    if (next === 'loud') {
+      if (!loudSince) loudSince = now;
+      if (now - loudSince < 400) next = 'medium';
+    } else loudSince = 0;
+
+    if (next === 'loud' && state !== 'loud' && now - lastLoudAt > 3000) {
+      loudCount++;
+      lastLoudAt = now;
+      if (settings.chime) tone([660, 520], 0.4, 0.25, 0.12);
+      if (settings.resetStar) starMs = 0;
+    }
+    setState(next);
+
+    totalMs += dt;
+    if (next !== 'loud') {
+      quietMs += dt;
+      starMs += dt;
+      if (starMs >= settings.starSecs * 1000) {
+        starMs = 0;
+        stars++;
+        renderStars(true);
+        tone([523, 659, 784, 1047], 0.3, 0.12, 0.12);
+        $('message').textContent = 'You earned a star! ⭐';
+        msgTimer = now;
+      }
+    }
+    renderStats();
+    requestAnimationFrame(tick);
+  }
+
+  // --- full screen ---
+  $('fsBtn').addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.();
+  });
+
+  // Keep the screen awake while listening, where supported (re-acquired when the tab comes back).
+  const keepAwake = async () => {
+    try { if (running && 'wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch {}
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
+
+  renderStars(false); renderStats();
+})();
+</script>
+</body>
+</html>
